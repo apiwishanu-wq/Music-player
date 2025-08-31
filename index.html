@@ -1,195 +1,257 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>YouTube Music Player</title>
-<style>
-/* --- Basic Styles --- */
-body { font-family: Arial, sans-serif; background: #f0f0f5; margin:0; padding:0; display:flex; justify-content:center; align-items:center; min-height:100vh; }
-.container { max-width: 600px; width:100%; padding:20px; }
-.login-container, .player-container { background:white; padding:30px; border-radius:15px; box-shadow:0 5px 15px rgba(0,0,0,0.1); }
-.player-container { display:none; }
-input { width:100%; padding:10px; margin:5px 0 15px 0; border:1px solid #ccc; border-radius:5px; }
-button { padding:10px 20px; border:none; border-radius:5px; cursor:pointer; background:#667eea; color:white; margin-top:10px; }
-button:hover { background:#5a67d8; }
-.playlist-item { display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #ddd; cursor:pointer; }
-.playlist-item.active { background:#667eea; color:white; }
-</style>
+  <meta charset="UTF-8">
+  <title>Music Player (Admin Demo)</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f7fa; margin: 0; padding: 0; }
+    .player-container { max-width: 600px; margin: 40px auto; background: white; padding: 24px 32px 32px; border-radius: 12px; box-shadow: 0 2px 12px #0001; }
+    h2, h3, h4 { margin-top: 0; }
+    .playlist-item { padding: 6px 0; cursor: pointer; border-bottom: 1px solid #eee; }
+    .playlist-item.active { background: #eaeaea; font-weight: bold;}
+    #adminSection { margin-top:30px; padding:15px; background:#f9fafb; border-radius:10px; border:1px solid #ddd; }
+    #broadcastMsg { margin-top:20px; background:#fefcbf; color:#744210; padding:10px; border-radius:6px; }
+    .btn { padding:3px 10px; border-radius:4px; border:none; background:#c6e2ff; cursor:pointer; }
+    .btn-danger { background: #ffb3b3; color:#900; }
+    .btn-sm { font-size: 0.9em; }
+    .input { padding:3px 7px; font-size:1em; }
+    .flex { display:flex; align-items:center; gap:8px; }
+  </style>
 </head>
 <body>
-<div class="container">
+  <div class="player-container" id="playerContainer">
+    <h2>Music Player</h2>
 
-<!-- Login Form -->
-<div id="loginContainer" class="login-container">
-<h2>Login</h2>
-<input type="text" id="loginUsername" placeholder="Username" required>
-<input type="password" id="loginPassword" placeholder="Password" required>
-<button id="loginBtn">Login</button>
-<p>Don't have an account? <button id="showSignupBtn">Sign Up</button></p>
-</div>
+    <!-- Login Section -->
+    <div id="loginSection">
+      <div class="flex">
+        <input id="loginUsername" class="input" placeholder="Username">
+        <input id="loginPassword" class="input" type="password" placeholder="Password">
+        <button id="loginBtn" class="btn">Login</button>
+      </div>
+    </div>
+    <div id="userSection" style="display:none;">
+      <span id="welcomeMsg"></span>
+      <button id="logoutBtn" class="btn btn-sm" style="float:right;">Logout</button>
+    </div>
 
-<!-- Signup Form -->
-<div id="signupContainer" class="login-container" style="display:none;">
-<h2>Sign Up</h2>
-<input type="text" id="signupUsername" placeholder="Username" required>
-<input type="email" id="signupEmail" placeholder="Email" required>
-<input type="password" id="signupPassword" placeholder="Password" required>
-<input type="password" id="signupConfirm" placeholder="Confirm Password" required>
-<button id="signupBtn">Create Account</button>
-<p>Already have an account? <button id="showLoginBtn">Login</button></p>
-</div>
+    <!-- Broadcast message for all users -->
+    <div id="broadcastMsg" style="display:none;"></div>
 
-<!-- Music Player -->
-<div id="playerContainer" class="player-container">
-<h2 id="welcomeMsg"></h2>
-<button id="logoutBtn" style="background:#ff6b6b;">Logout</button>
+    <hr>
+    <h3>Now Playing</h3>
+    <iframe id="videoPlayer" width="100%" height="315" src="" frameborder="0" allowfullscreen></iframe>
 
-<h3>Add YouTube URL:</h3>
-<input type="text" id="urlInput" placeholder="Paste YouTube URL">
-<button id="addUrlBtn">Add to Playlist</button>
-    
-<input type="text" id="searchInput" placeholder="Search playlist..." style="width:100%;padding:8px;margin-bottom:10px;">
-<h3>Playlist</h3>
-<div id="playlistContainer"><div id="playerContainer" class="player-container">
-  ...
-  <h3>Now Playing</h3>
-  <iframe id="videoPlayer" width="100%" height="315" src="" frameborder="0" allowfullscreen></iframe>
+    <h4>Playlist</h4>
+    <div id="playlistContainer"></div>
+    <div id="addSongSection" style="margin-top:15px;">
+      <input id="youtubeUrl" class="input" placeholder="YouTube URL">
+      <button id="addUrlBtn" class="btn">Add</button>
+    </div>
 
-  <!-- Admin-only section (add this part) -->
-  <div id="adminSection" style="display:none; margin-top:30px; padding:15px; background:#f9fafb; border-radius:10px; border:1px solid #ddd;">
-    <h3>Admin Dashboard</h3>
-    <p>Welcome, Admin! You have special privileges.</p>
-    <!-- You can add more admin-only controls here in the future -->
+    <!-- Admin Dashboard Section -->
+    <div id="adminSection" style="display:none;">
+      <h3>Admin Dashboard</h3>
+
+      <!-- User Management -->
+      <div>
+        <h4>User Management</h4>
+        <ul id="userList"></ul>
+      </div>
+
+      <!-- Playlist Management -->
+      <div>
+        <h4>Playlist Management</h4>
+        <ul id="adminPlaylist"></ul>
+      </div>
+
+      <!-- Broadcast Message -->
+      <div style="margin-top:18px;">
+        <h4>Broadcast Message</h4>
+        <input type="text" id="broadcastInput" placeholder="Message to all users" style="width:70%;" class="input" />
+        <button id="broadcastBtn" class="btn btn-sm">Send</button>
+        <span id="broadcastStatus" style="color:green; margin-left:10px;"></span>
+      </div>
+    </div>
   </div>
-</div></div>.
+  <script>
+    // --- Initial Demo Data ---
+    let users = [
+      { username: 'admin', password: 'admin', email: 'admin@music.com' },
+      { username: 'alice', password: 'alice', email: 'alice@email.com' },
+      { username: 'bob', password: 'bob', email: 'bob@email.com' }
+    ];
+    let playlist = [];
+    let currentTrack = 0;
+    let currentUser = null;
+    let broadcastMessage = '';
 
-<h3>Now Playing</h3>
-<iframe id="videoPlayer" width="100%" height="315" src="" frameborder="0" allowfullscreen></iframe>
-</div>
-</div>
+    // --- Elements ---
+    const loginSection = document.getElementById('loginSection');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginUsername = document.getElementById('loginUsername');
+    const loginPassword = document.getElementById('loginPassword');
+    const userSection = document.getElementById('userSection');
+    const welcomeMsg = document.getElementById('welcomeMsg');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const playlistContainer = document.getElementById('playlistContainer');
+    const addUrlBtn = document.getElementById('addUrlBtn');
+    const youtubeUrl = document.getElementById('youtubeUrl');
+    const videoPlayer = document.getElementById('videoPlayer');
+    const adminSection = document.getElementById('adminSection');
+    const userList = document.getElementById('userList');
+    const adminPlaylist = document.getElementById('adminPlaylist');
+    const broadcastInput = document.getElementById('broadcastInput');
+    const broadcastBtn = document.getElementById('broadcastBtn');
+    const broadcastStatus = document.getElementById('broadcastStatus');
+    const broadcastMsg = document.getElementById('broadcastMsg');
+    const addSongSection = document.getElementById('addSongSection');
 
-<script>
-// --- Users Storage ---
-let users = [{username:'admin boon', password:'boon42622', email:'admin@example.com'}];
-let currentUser = null;
+    // --- Login Logic ---
+    loginBtn.onclick = () => {
+      const un = loginUsername.value.trim();
+      const pw = loginPassword.value.trim();
+      const found = users.find(u => u.username === un && u.password === pw);
+      if (!found) {
+        alert('Invalid credentials');
+        return;
+      }
+      currentUser = found;
+      loginSection.style.display = 'none';
+      userSection.style.display = '';
+      welcomeMsg.textContent = `Welcome, ${currentUser.username}!`;
+      addSongSection.style.display = '';
+      renderPlaylist();
 
-// --- Playlist ---
-let playlist = [];
-let currentTrack = 0;
+      // Admin section
+      if (currentUser.username === 'admin') {
+        adminSection.style.display = 'block';
+        renderUserList();
+        renderAdminPlaylist();
+      } else {
+        adminSection.style.display = 'none';
+      }
 
-// --- Elements ---
-const loginContainer = document.getElementById('loginContainer');
-const signupContainer = document.getElementById('signupContainer');
-const playerContainer = document.getElementById('playerContainer');
-const loginBtn = document.getElementById('loginBtn');
-const signupBtn = document.getElementById('signupBtn');
-const showSignupBtn = document.getElementById('showSignupBtn');
-const showLoginBtn = document.getElementById('showLoginBtn');
-const logoutBtn = document.getElementById('logoutBtn');
-const welcomeMsg = document.getElementById('welcomeMsg');
-const urlInput = document.getElementById('urlInput');
-const addUrlBtn = document.getElementById('addUrlBtn');
-const playlistContainer = document.getElementById('playlistContainer');
-const videoPlayer = document.getElementById('videoPlayer');
-const adminSection = document.getElementById('adminSection');
-// --- Show/Hide Forms ---
-showSignupBtn.onclick = ()=>{ loginContainer.style.display='none'; signupContainer.style.display='block'; }
-showLoginBtn.onclick = ()=>{ signupContainer.style.display='none'; loginContainer.style.display='block'; }
+      // Show broadcast if set
+      if (broadcastMessage) {
+        broadcastMsg.style.display = 'block';
+        broadcastMsg.textContent = broadcastMessage;
+      } else {
+        broadcastMsg.style.display = 'none';
+        broadcastMsg.textContent = '';
+      }
+    };
 
-// --- Signup ---
-signupBtn.onclick = ()=>{
-    const username = document.getElementById('signupUsername').value.trim();
-    const email = document.getElementById('signupEmail').value.trim();
-    const password = document.getElementById('signupPassword').value;
-    const confirm = document.getElementById('signupConfirm').value;
+    logoutBtn.onclick = () => {
+      currentUser = null;
+      loginSection.style.display = '';
+      userSection.style.display = 'none';
+      adminSection.style.display = 'none';
+      addSongSection.style.display = '';
+      broadcastMsg.style.display = 'none';
+      renderPlaylist();
+    };
 
-    if(password!==confirm){ alert('Passwords do not match'); return; }
-    if(users.find(u=>u.username===username)){ alert('Username exists'); return; }
-    users.push({username,email,password});
-    alert('Account created!');
-    signupContainer.style.display='none';
-    loginContainer.style.display='block';
-    document.getElementById('loginUsername').value=username;
-}
+    // --- Playlist Logic ---
+    addUrlBtn.onclick = () => {
+      const url = youtubeUrl.value.trim();
+      if (!url) return;
+      const id = getYouTubeId(url);
+      if (!id) {
+        alert('Invalid YouTube URL');
+        return;
+      }
+      playlist.push({id, title: 'YouTube Video', addedBy: currentUser ? currentUser.username : 'unknown'});
+      youtubeUrl.value = '';
+      renderPlaylist();
+      if (currentUser && currentUser.username === 'admin') renderAdminPlaylist();
+    };
 
-// --- Login ---
-loginBtn.onclick = ()=>{
-    const username = document.getElementById('loginUsername').value.trim();
-    const password = document.getElementById('loginPassword').value;
-    const user = users.find(u=>u.username===username && u.password===password);
-    if(user){
-        currentUser=user;
-        loginContainer.style.display='none';
-        playerContainer.style.display='block';
-        welcomeMsg.textContent = `Welcome, ${currentUser.username}!`;
-        if(currentUser.username === 'admin') {
-  adminSection.style.display = 'block';
-} else {
-  adminSection.style.display = 'none';
-}
-        renderPlaylist();
-    }else{ alert('Invalid username/password'); }
-}
+    function getYouTubeId(url) {
+      const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|v\/))([\w-]{11})/);
+      return match ? match[1] : null;
+    }
 
-// --- Logout ---
-logoutBtn.onclick = ()=>{
-    currentUser=null;
-    adminSection.style.display = 'none';
-    playerContainer.style.display='none';
-    loginContainer.style.display='block';
-    playlist=[];
-    videoPlayer.src='';
-}
-
-// --- Add URL ---
-addUrlBtn.onclick = ()=>{
-    const url = urlInput.value.trim();
-    const id = extractVideoId(url);
-    if(!id){ alert('Invalid URL'); return; }
-    playlist.push({id, title:'YouTube Video'});
-    renderPlaylist();
-    urlInput.value='';
-}
-
-// --- Extract Video ID ---
-function extractVideoId(url){
-    const match = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-    return match?match[1]:null;
-}
-
-// --- Render Playlist ---
-function renderPlaylist(){
-    playlistContainer.innerHTML='';
-    const filter = document.getElementById('searchInput')?.value?.toLowerCase() || '';
-    playlist.forEach((track,i)=>{
-        if (track.title.toLowerCase().includes(filter)) {
-            const div=document.createElement('div');
-            div.textContent=track.title;
-            div.className='playlist-item'+(i===currentTrack?' active':'');
-            div.onclick=()=>{ playTrack(i); }
-            playlistContainer.appendChild(div);
-        }
-    });
-}
-function renderPlaylist(){
-    playlistContainer.innerHTML='';
-    playlist.forEach((track,i)=>{
+    function renderPlaylist(){
+      playlistContainer.innerHTML='';
+      playlist.forEach((track,i)=>{
         const div=document.createElement('div');
-        div.textContent=track.title;
+        div.textContent=`${track.title} [by ${track.addedBy||'unknown'}]`;
         div.className='playlist-item'+(i===currentTrack?' active':'');
         div.onclick=()=>{ playTrack(i); }
         playlistContainer.appendChild(div);
-    });
-}
+      });
+      // Play first track if nothing is playing
+      if (playlist.length && videoPlayer.src === '') {
+        playTrack(0);
+      }
+    }
 
-// --- Play Track ---
-function playTrack(index){
-    currentTrack=index;
-    const track = playlist[index];
-    videoPlayer.src = `https://www.youtube.com/embed/${track.id}?autoplay=1`;
-    renderPlaylist();
-}
-</script>
+    function playTrack(idx) {
+      if (!playlist[idx]) return;
+      currentTrack = idx;
+      videoPlayer.src = 'https://www.youtube.com/embed/' + playlist[idx].id + '?autoplay=1';
+      renderPlaylist();
+    }
+
+    // --- User Management (Admin Only) ---
+    function renderUserList() {
+      userList.innerHTML = '';
+      users.forEach((user, idx) => {
+        if (user.username === 'admin') return; // Don't allow deleting admin
+        const li = document.createElement('li');
+        li.textContent = `${user.username} (${user.email || 'no email'}) `;
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Delete';
+        delBtn.className = "btn btn-danger btn-sm";
+        delBtn.onclick = () => {
+          users.splice(idx, 1);
+          renderUserList();
+        };
+        li.appendChild(delBtn);
+        userList.appendChild(li);
+      });
+    }
+
+    // --- Playlist Management (Admin Only) ---
+    function renderAdminPlaylist() {
+      adminPlaylist.innerHTML = '';
+      playlist.forEach((track, i) => {
+        const li = document.createElement('li');
+        li.textContent = `[${track.addedBy}] ${track.title} `;
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Remove';
+        delBtn.className = "btn btn-danger btn-sm";
+        delBtn.onclick = () => {
+          playlist.splice(i, 1);
+          renderAdminPlaylist();
+          renderPlaylist();
+        };
+        li.appendChild(delBtn);
+        adminPlaylist.appendChild(li);
+      });
+    }
+
+    // --- Broadcast Message (Admin Only) ---
+    broadcastBtn.onclick = () => {
+      broadcastMessage = broadcastInput.value.trim();
+      if (broadcastMessage) {
+        broadcastStatus.textContent = "Message sent!";
+        broadcastMsg.style.display = 'block';
+        broadcastMsg.textContent = broadcastMessage;
+      } else {
+        broadcastStatus.textContent = '';
+        broadcastMsg.style.display = 'none';
+        broadcastMsg.textContent = '';
+      }
+      setTimeout(() => broadcastStatus.textContent = '', 2000);
+    };
+
+    // --- Hide Add Song Section for Non-logged-in Users ---
+    addSongSection.style.display = 'none';
+    // --- Auto-login as admin for demo (optional, you can remove this for real use) ---
+    // loginUsername.value = 'admin'; loginPassword.value = 'admin';
+    // loginBtn.click();
+  </script>
 </body>
 </html>
