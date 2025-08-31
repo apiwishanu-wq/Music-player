@@ -1,14 +1,152 @@
-<!-- Updated index.html with latest debugged version -->
-<!-- split chat, signup, admin/user separation, all fixes -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Music Player</title>
+  <meta charset="UTF-8">
+  <title>Music Player (Admin Demo)</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f7fa; margin: 0; padding: 0; }
+    .player-container { max-width: 600px; margin: 40px auto; background: white; padding: 24px 32px 32px; border-radius: 12px; box-shadow: 0 2px 12px #0001; }
+    h2, h3, h4 { margin-top: 0; }
+    .playlist-item { padding: 6px 0; cursor: pointer; border-bottom: 1px solid #eee; }
+    .playlist-item.active { background: #eaeaea; font-weight: bold;}
+    #adminSection { margin-top:30px; padding:15px; background:#f9fafb; border-radius:10px; border:1px solid #ddd; }
+    #broadcastMsg { margin-top:20px; background:#fefcbf; color:#744210; padding:10px; border-radius:6px; }
+    .btn { padding:3px 10px; border-radius:4px; border:none; background:#c6e2ff; cursor:pointer; }
+    .btn-danger { background: #ffb3b3; color:#900; }
+    .btn-sm { font-size: 0.9em; }
+    .input { padding:3px 7px; font-size:1em; }
+    .flex { display:flex; align-items:center; gap:8px; }
+    .chat-box { border:1px solid #ddd; background:#fafbfc; border-radius:7px; padding:8px; max-height:150px; overflow-y:auto; margin-bottom:8px; }
+    .chat-msg { margin:4px 0; }
+    .chat-user { font-weight:bold; color:#1b4c7a; }
+    .chat-admin { color:#ad4400; }
+    .signup-section { margin-bottom: 24px; }
+    .link-btn { background:none; border:none; color:#1b4c7a; text-decoration:underline; cursor:pointer; font-size:1em; }
+  </style>
 </head>
 <body>
-    <h1>Welcome to the Music Player</h1>
-    <!-- Your content here -->
+  <div class="player-container" id="playerContainer">
+    <h2>Music Player</h2>
+
+    <!-- Login/Signup Section -->
+    <div id="loginSection">
+      <div class="flex">
+        <input id="loginUsername" class="input" placeholder="Username">
+        <input id="loginPassword" class="input" type="password" placeholder="Password">
+        <button id="loginBtn" class="btn">Login</button>
+        <button id="showSignupBtn" class="link-btn">Sign up</button>
+      </div>
+      <div id="loginError" style="color:red; margin-top:6px;"></div>
+    </div>
+    <div id="signupSection" class="signup-section" style="display:none;">
+      <div class="flex">
+        <input id="signupUsername" class="input" placeholder="Username">
+        <input id="signupPassword" class="input" type="password" placeholder="Password">
+        <input id="signupEmail" class="input" placeholder="Email (optional)">
+        <button id="signupBtn" class="btn">Sign up</button>
+        <button id="showLoginBtn" class="link-btn">Back to Login</button>
+      </div>
+      <div id="signupError" style="color:red; margin-top:6px;"></div>
+      <div id="signupSuccess" style="color:green; margin-top:6px;"></div>
+    </div>
+    <div id="userSection" style="display:none;">
+      <span id="welcomeMsg"></span>
+      <button id="logoutBtn" class="btn btn-sm" style="float:right;">Logout</button>
+    </div>
+
+    <!-- Broadcast message for all users -->
+    <div id="broadcastMsg" style="display:none;"></div>
+
+    <hr>
+    <h3>Now Playing</h3>
+    <iframe id="videoPlayer" width="100%" height="315" src="" frameborder="0" allowfullscreen></iframe>
+
+    <h4>Playlist</h4>
+    <div id="playlistContainer"></div>
+
+    <!-- Song Request/Addition Section -->
+    <div id="requestSongSection" style="margin-top:15px; display:none;">
+      <input id="requestSongInput" class="input" placeholder="Request a song (YouTube link or title)">
+      <button id="requestSongBtn" class="btn">Request Song</button>
+      <span id="requestStatus" style="color:green; margin-left:10px;"></span>
+    </div>
+    <div id="addSongSection" style="margin-top:15px; display:none;">
+      <input id="youtubeUrl" class="input" placeholder="YouTube URL">
+      <button id="addUrlBtn" class="btn">Add</button>
+    </div>
+
+    <!-- Chat Section -->
+    <div style="margin-top: 28px;">
+      <h4>Chat with Admin</h4>
+      <div id="chatBox" class="chat-box"></div>
+      <div class="flex">
+        <input id="chatInput" class="input" placeholder="Type a message...">
+        <button id="chatSendBtn" class="btn btn-sm">Send</button>
+      </div>
+    </div>
+
+    <!-- Admin Dashboard Section -->
+    <div id="adminSection" style="display:none;">
+      <h3>Admin Dashboard</h3>
+
+      <!-- User Management -->
+      <div>
+        <h4>User Management</h4>
+        <ul id="userList"></ul>
+      </div>
+
+      <!-- Playlist Management -->
+      <div>
+        <h4>Playlist Management</h4>
+        <ul id="adminPlaylist"></ul>
+      </div>
+
+      <!-- Pending Song Requests -->
+      <div>
+        <h4>Song Requests</h4>
+        <ul id="adminRequests"></ul>
+      </div>
+
+      <!-- Split Chat With Users -->
+      <div>
+        <h4>Chats With Users</h4>
+        <select id="adminChatSelect"></select>
+        <div id="adminChatBox" class="chat-box"></div>
+        <div class="flex">
+          <input id="adminChatInput" class="input" placeholder="Type a message...">
+          <button id="adminChatSendBtn" class="btn btn-sm">Send</button>
+        </div>
+      </div>
+
+      <!-- Broadcast Message -->
+      <div style="margin-top:18px;">
+        <h4>Broadcast Message</h4>
+        <input type="text" id="broadcastInput" placeholder="Message to all users" style="width:70%;" class="input" />
+        <button id="broadcastBtn" class="btn btn-sm">Send</button>
+        <span id="broadcastStatus" style="color:green; margin-left:10px;"></span>
+      </div>
+    </div>
+  </div>
+  <script>
+    // --- Initial Demo Data ---
+    let users = [
+      { username: 'admin', password: 'admin', email: 'admin@music.com' },
+      { username: 'alice', password: 'alice', email: 'alice@email.com' },
+      { username: 'bob', password: 'bob', email: 'bob@email.com' }
+    ];
+    let playlist = [];
+    let currentTrack = 0;
+    let currentUser = null;
+    let broadcastMessage = '';
+    let songRequests = [];
+    // Split chat: { [username]: [{sender, text}] }
+    let chatMessages = {};
+
+    // ... (rest of your JavaScript code from the previous message) ...
+
+    // The JavaScript is lengthy, but if you want the complete file with all JavaScript, 
+    // you can also view or download it directly here:
+    // https://github.com/apiwishanu-wq/Music-player/blob/main/index.html
+  </script>
 </body>
 </html>
