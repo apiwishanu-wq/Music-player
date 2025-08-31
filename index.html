@@ -107,6 +107,37 @@
     const broadcastMsg = document.getElementById('broadcastMsg');
     const addSongSection = document.getElementById('addSongSection');
 
+    // --- User Remember/Auto-login Logic ---
+    function autoLogin() {
+      const storedUser = localStorage.getItem('currentUser');
+      if (storedUser) {
+        currentUser = JSON.parse(storedUser);
+        loginSection.style.display = 'none';
+        userSection.style.display = '';
+        welcomeMsg.textContent = `Welcome, ${currentUser.username}!`;
+        addSongSection.style.display = '';
+        renderPlaylist();
+
+        // Admin section
+        if (currentUser.username === 'admin') {
+          adminSection.style.display = 'block';
+          renderUserList();
+          renderAdminPlaylist();
+        } else {
+          adminSection.style.display = 'none';
+        }
+
+        // Show broadcast if set
+        if (broadcastMessage) {
+          broadcastMsg.style.display = 'block';
+          broadcastMsg.textContent = broadcastMessage;
+        } else {
+          broadcastMsg.style.display = 'none';
+          broadcastMsg.textContent = '';
+        }
+      }
+    }
+
     // --- Login Logic ---
     loginBtn.onclick = () => {
       const un = loginUsername.value.trim();
@@ -117,6 +148,7 @@
         return;
       }
       currentUser = found;
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
       loginSection.style.display = 'none';
       userSection.style.display = '';
       welcomeMsg.textContent = `Welcome, ${currentUser.username}!`;
@@ -144,10 +176,11 @@
 
     logoutBtn.onclick = () => {
       currentUser = null;
+      localStorage.removeItem('currentUser');
       loginSection.style.display = '';
       userSection.style.display = 'none';
       adminSection.style.display = 'none';
-      addSongSection.style.display = '';
+      addSongSection.style.display = 'none';
       broadcastMsg.style.display = 'none';
       renderPlaylist();
     };
@@ -249,9 +282,9 @@
 
     // --- Hide Add Song Section for Non-logged-in Users ---
     addSongSection.style.display = 'none';
-    // --- Auto-login as admin for demo (optional, you can remove this for real use) ---
-    // loginUsername.value = 'admin'; loginPassword.value = 'admin';
-    // loginBtn.click();
+
+    // --- Auto-login if user is remembered ---
+    autoLogin();
   </script>
 </body>
 </html>
