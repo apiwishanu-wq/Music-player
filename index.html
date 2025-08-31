@@ -16,6 +16,10 @@
     .btn-sm { font-size: 0.9em; }
     .input { padding:3px 7px; font-size:1em; }
     .flex { display:flex; align-items:center; gap:8px; }
+    .chat-box { border:1px solid #ddd; background:#fafbfc; border-radius:7px; padding:8px; max-height:150px; overflow-y:auto; margin-bottom:8px; }
+    .chat-msg { margin:4px 0; }
+    .chat-user { font-weight:bold; color:#1b4c7a; }
+    .chat-admin { color:#ad4400; }
   </style>
 </head>
 <body>
@@ -44,9 +48,26 @@
 
     <h4>Playlist</h4>
     <div id="playlistContainer"></div>
-    <div id="addSongSection" style="margin-top:15px;">
+
+    <!-- Song Request/Addition Section -->
+    <div id="requestSongSection" style="margin-top:15px; display:none;">
+      <input id="requestSongInput" class="input" placeholder="Request a song (YouTube link or title)">
+      <button id="requestSongBtn" class="btn">Request Song</button>
+      <span id="requestStatus" style="color:green; margin-left:10px;"></span>
+    </div>
+    <div id="addSongSection" style="margin-top:15px; display:none;">
       <input id="youtubeUrl" class="input" placeholder="YouTube URL">
       <button id="addUrlBtn" class="btn">Add</button>
+    </div>
+
+    <!-- Chat Section -->
+    <div style="margin-top: 28px;">
+      <h4>Chat with Admin</h4>
+      <div id="chatBox" class="chat-box"></div>
+      <div class="flex">
+        <input id="chatInput" class="input" placeholder="Type a message...">
+        <button id="chatSendBtn" class="btn btn-sm">Send</button>
+      </div>
     </div>
 
     <!-- Admin Dashboard Section -->
@@ -75,6 +96,12 @@
         <ul id="adminPlaylist"></ul>
       </div>
 
+      <!-- Pending Song Requests -->
+      <div>
+        <h4>Song Requests</h4>
+        <ul id="adminRequests"></ul>
+      </div>
+
       <!-- Broadcast Message -->
       <div style="margin-top:18px;">
         <h4>Broadcast Message</h4>
@@ -95,6 +122,8 @@
     let currentTrack = 0;
     let currentUser = null;
     let broadcastMessage = '';
+    let songRequests = [];
+    let chatMessages = [];
 
     // --- Elements ---
     const loginSection = document.getElementById('loginSection');
@@ -107,21 +136,29 @@
     const playlistContainer = document.getElementById('playlistContainer');
     const addUrlBtn = document.getElementById('addUrlBtn');
     const youtubeUrl = document.getElementById('youtubeUrl');
-    const videoPlayer = document.getElementById('videoPlayer');
     const adminSection = document.getElementById('adminSection');
     const userList = document.getElementById('userList');
     const adminPlaylist = document.getElementById('adminPlaylist');
+    const adminRequests = document.getElementById('adminRequests');
     const broadcastInput = document.getElementById('broadcastInput');
     const broadcastBtn = document.getElementById('broadcastBtn');
     const broadcastStatus = document.getElementById('broadcastStatus');
     const broadcastMsg = document.getElementById('broadcastMsg');
     const addSongSection = document.getElementById('addSongSection');
+    const requestSongSection = document.getElementById('requestSongSection');
+    const requestSongInput = document.getElementById('requestSongInput');
+    const requestSongBtn = document.getElementById('requestSongBtn');
+    const requestStatus = document.getElementById('requestStatus');
     // Add new user
     const newUserUsername = document.getElementById('newUserUsername');
     const newUserPassword = document.getElementById('newUserPassword');
     const newUserEmail = document.getElementById('newUserEmail');
     const addUserBtn = document.getElementById('addUserBtn');
     const addUserStatus = document.getElementById('addUserStatus');
+    // Chat
+    const chatBox = document.getElementById('chatBox');
+    const chatInput = document.getElementById('chatInput');
+    const chatSendBtn = document.getElementById('chatSendBtn');
 
     // --- User Remember/Auto-login Logic ---
     function autoLogin() {
@@ -131,18 +168,21 @@
         loginSection.style.display = 'none';
         userSection.style.display = '';
         welcomeMsg.textContent = `Welcome, ${currentUser.username}!`;
-        addSongSection.style.display = '';
-        renderPlaylist();
-
-        // Admin section
+        // Show/hide add/request song sections
         if (currentUser.username === 'admin') {
+          addSongSection.style.display = '';
+          requestSongSection.style.display = 'none';
           adminSection.style.display = 'block';
           renderUserList();
           renderAdminPlaylist();
+          renderRequests();
         } else {
+          addSongSection.style.display = 'none';
+          requestSongSection.style.display = '';
           adminSection.style.display = 'none';
         }
-
+        renderPlaylist();
+        renderChat();
         // Show broadcast if set
         if (broadcastMessage) {
           broadcastMsg.style.display = 'block';
@@ -168,18 +208,20 @@
       loginSection.style.display = 'none';
       userSection.style.display = '';
       welcomeMsg.textContent = `Welcome, ${currentUser.username}!`;
-      addSongSection.style.display = '';
-      renderPlaylist();
-
-      // Admin section
       if (currentUser.username === 'admin') {
+        addSongSection.style.display = '';
+        requestSongSection.style.display = 'none';
         adminSection.style.display = 'block';
         renderUserList();
         renderAdminPlaylist();
+        renderRequests();
       } else {
+        addSongSection.style.display = 'none';
+        requestSongSection.style.display = '';
         adminSection.style.display = 'none';
       }
-
+      renderPlaylist();
+      renderChat();
       // Show broadcast if set
       if (broadcastMessage) {
         broadcastMsg.style.display = 'block';
@@ -197,11 +239,13 @@
       userSection.style.display = 'none';
       adminSection.style.display = 'none';
       addSongSection.style.display = 'none';
+      requestSongSection.style.display = 'none';
       broadcastMsg.style.display = 'none';
       renderPlaylist();
+      chatBox.innerHTML = '';
     };
 
-    // --- Playlist Logic ---
+    // --- Playlist Logic (admin only) ---
     addUrlBtn.onclick = () => {
       const url = youtubeUrl.value.trim();
       if (!url) return;
@@ -213,7 +257,7 @@
       playlist.push({id, title: 'YouTube Video', addedBy: currentUser ? currentUser.username : 'unknown'});
       youtubeUrl.value = '';
       renderPlaylist();
-      if (currentUser && currentUser.username === 'admin') renderAdminPlaylist();
+      renderAdminPlaylist();
     };
 
     function getYouTubeId(url) {
@@ -227,12 +271,18 @@
         const div=document.createElement('div');
         div.textContent=`${track.title} [by ${track.addedBy||'unknown'}]`;
         div.className='playlist-item'+(i===currentTrack?' active':'');
-        div.onclick=()=>{ playTrack(i); }
+        // Only admin can select/play
+        if (currentUser && currentUser.username === 'admin') {
+          div.onclick=()=>{ playTrack(i); }
+        }
         playlistContainer.appendChild(div);
       });
-      // Play first track if nothing is playing
-      if (playlist.length && videoPlayer.src === '') {
+      // Play first track if nothing is playing and admin is logged in
+      if (currentUser && currentUser.username === 'admin' && playlist.length && videoPlayer.src === '') {
         playTrack(0);
+      }
+      if (!currentUser || currentUser.username !== 'admin') {
+        videoPlayer.src = '';
       }
     }
 
@@ -241,6 +291,52 @@
       currentTrack = idx;
       videoPlayer.src = 'https://www.youtube.com/embed/' + playlist[idx].id + '?autoplay=1';
       renderPlaylist();
+    }
+
+    // --- Song Requests ---
+    requestSongBtn.onclick = () => {
+      const req = requestSongInput.value.trim();
+      if (!req) return;
+      songRequests.push({user: currentUser.username, request: req});
+      requestStatus.textContent = 'Request sent!';
+      requestSongInput.value = '';
+      renderRequests();
+      setTimeout(() => requestStatus.textContent = '', 2000);
+    };
+
+    function renderRequests() {
+      if (!adminRequests) return;
+      adminRequests.innerHTML = '';
+      songRequests.forEach((sr, idx) => {
+        const li = document.createElement('li');
+        li.textContent = `${sr.user}: ${sr.request} `;
+        const addBtn = document.createElement('button');
+        addBtn.textContent = 'Add';
+        addBtn.className = 'btn btn-sm';
+        addBtn.onclick = () => {
+          // If possible, try to extract YouTube ID
+          const id = getYouTubeId(sr.request);
+          playlist.push({
+            id: id || '',
+            title: id ? 'YouTube Video' : sr.request,
+            addedBy: sr.user
+          });
+          songRequests.splice(idx, 1);
+          renderRequests();
+          renderAdminPlaylist();
+          renderPlaylist();
+        };
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Dismiss';
+        delBtn.className = 'btn btn-danger btn-sm';
+        delBtn.onclick = () => {
+          songRequests.splice(idx, 1);
+          renderRequests();
+        };
+        li.appendChild(addBtn);
+        li.appendChild(delBtn);
+        adminRequests.appendChild(li);
+      });
     }
 
     // --- User Management (Admin Only) ---
@@ -322,8 +418,42 @@
       setTimeout(() => broadcastStatus.textContent = '', 2000);
     };
 
-    // --- Hide Add Song Section for Non-logged-in Users ---
+    // --- Chat Functionality (Everyone, with admin) ---
+    function renderChat() {
+      chatBox.innerHTML = '';
+      chatMessages.forEach(msg => {
+        const div = document.createElement('div');
+        div.className = 'chat-msg';
+        if (msg.sender === 'admin') {
+          div.innerHTML = `<span class="chat-user chat-admin">Admin:</span> ${msg.text}`;
+        } else {
+          div.innerHTML = `<span class="chat-user">${msg.sender}:</span> ${msg.text}`;
+        }
+        chatBox.appendChild(div);
+      });
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    chatSendBtn.onclick = () => {
+      const txt = chatInput.value.trim();
+      if (!txt || !currentUser) return;
+      chatMessages.push({sender: currentUser.username, text: txt});
+      chatInput.value = '';
+      renderChat();
+    };
+
+    // For admin, allow reply as admin to users
+    chatBox.addEventListener('click', function(e){
+      if (currentUser && currentUser.username === 'admin' && e.target.classList.contains('chat-user') && !e.target.classList.contains('chat-admin')) {
+        const user = e.target.textContent.replace(':', '');
+        chatInput.value = `@${user} `;
+        chatInput.focus();
+      }
+    });
+
+    // --- Hide Add/Request Song Section for Non-logged-in Users ---
     addSongSection.style.display = 'none';
+    requestSongSection.style.display = 'none';
 
     // --- Auto-login if user is remembered ---
     autoLogin();
