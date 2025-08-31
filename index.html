@@ -59,6 +59,16 @@
         <ul id="userList"></ul>
       </div>
 
+      <!-- Add New User -->
+      <div style="margin-top:18px;">
+        <h4>Add New User</h4>
+        <input type="text" id="newUserUsername" class="input" placeholder="Username">
+        <input type="password" id="newUserPassword" class="input" placeholder="Password">
+        <input type="email" id="newUserEmail" class="input" placeholder="Email (optional)">
+        <button id="addUserBtn" class="btn btn-sm">Add User</button>
+        <span id="addUserStatus" style="color:green; margin-left:10px;"></span>
+      </div>
+
       <!-- Playlist Management -->
       <div>
         <h4>Playlist Management</h4>
@@ -106,6 +116,12 @@
     const broadcastStatus = document.getElementById('broadcastStatus');
     const broadcastMsg = document.getElementById('broadcastMsg');
     const addSongSection = document.getElementById('addSongSection');
+    // Add new user
+    const newUserUsername = document.getElementById('newUserUsername');
+    const newUserPassword = document.getElementById('newUserPassword');
+    const newUserEmail = document.getElementById('newUserEmail');
+    const addUserBtn = document.getElementById('addUserBtn');
+    const addUserStatus = document.getElementById('addUserStatus');
 
     // --- User Remember/Auto-login Logic ---
     function autoLogin() {
@@ -245,6 +261,32 @@
         userList.appendChild(li);
       });
     }
+
+    // --- Add New User (Admin Only) ---
+    addUserBtn.onclick = () => {
+      const username = newUserUsername.value.trim();
+      const password = newUserPassword.value.trim();
+      const email = newUserEmail.value.trim();
+
+      if (!username || !password) {
+        addUserStatus.style.color = "red";
+        addUserStatus.textContent = "Username and password required.";
+        return;
+      }
+      if (users.find(u => u.username === username)) {
+        addUserStatus.style.color = "red";
+        addUserStatus.textContent = "Username already exists.";
+        return;
+      }
+      users.push({ username, password, email });
+      addUserStatus.style.color = "green";
+      addUserStatus.textContent = "User added!";
+      newUserUsername.value = '';
+      newUserPassword.value = '';
+      newUserEmail.value = '';
+      renderUserList();
+      setTimeout(() => addUserStatus.textContent = '', 2000);
+    };
 
     // --- Playlist Management (Admin Only) ---
     function renderAdminPlaylist() {
