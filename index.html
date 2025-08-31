@@ -51,7 +51,18 @@ button:hover { background:#5a67d8; }
     
 <input type="text" id="searchInput" placeholder="Search playlist..." style="width:100%;padding:8px;margin-bottom:10px;">
 <h3>Playlist</h3>
-<div id="playlistContainer"></div>.
+<div id="playlistContainer"><div id="playerContainer" class="player-container">
+  ...
+  <h3>Now Playing</h3>
+  <iframe id="videoPlayer" width="100%" height="315" src="" frameborder="0" allowfullscreen></iframe>
+
+  <!-- Admin-only section (add this part) -->
+  <div id="adminSection" style="display:none; margin-top:30px; padding:15px; background:#f9fafb; border-radius:10px; border:1px solid #ddd;">
+    <h3>Admin Dashboard</h3>
+    <p>Welcome, Admin! You have special privileges.</p>
+    <!-- You can add more admin-only controls here in the future -->
+  </div>
+</div></div>.
 
 <h3>Now Playing</h3>
 <iframe id="videoPlayer" width="100%" height="315" src="" frameborder="0" allowfullscreen></iframe>
@@ -81,7 +92,7 @@ const urlInput = document.getElementById('urlInput');
 const addUrlBtn = document.getElementById('addUrlBtn');
 const playlistContainer = document.getElementById('playlistContainer');
 const videoPlayer = document.getElementById('videoPlayer');
-
+const adminSection = document.getElementById('adminSection');
 // --- Show/Hide Forms ---
 showSignupBtn.onclick = ()=>{ loginContainer.style.display='none'; signupContainer.style.display='block'; }
 showLoginBtn.onclick = ()=>{ signupContainer.style.display='none'; loginContainer.style.display='block'; }
@@ -112,6 +123,11 @@ loginBtn.onclick = ()=>{
         loginContainer.style.display='none';
         playerContainer.style.display='block';
         welcomeMsg.textContent = `Welcome, ${currentUser.username}!`;
+        if(currentUser.username === 'admin') {
+  adminSection.style.display = 'block';
+} else {
+  adminSection.style.display = 'none';
+}
         renderPlaylist();
     }else{ alert('Invalid username/password'); }
 }
@@ -119,6 +135,7 @@ loginBtn.onclick = ()=>{
 // --- Logout ---
 logoutBtn.onclick = ()=>{
     currentUser=null;
+    adminSection.style.display = 'none';
     playerContainer.style.display='none';
     loginContainer.style.display='block';
     playlist=[];
