@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YouTube Music Player</title>
+<style>
+/* --- Basic Styles --- */
+body { font-family: Arial, sans-serif; background: #f0f0f5; margin:0; padding:0; display:flex; justify-content:center; align-items:center; min-height:100vh; }
+.container { max-width: 600px; width:100%; padding:20px; }
+.login-container, .player-container { background:white; padding:30px; border-radius:15px; box-shadow:0 5px 15px rgba(0,0,0,0.1); }
+.player-container { display:none; }
+input { width:100%; padding:10px; margin:5px 0 15px 0; border:1px solid #ccc; border-radius:5px; }
+button { padding:10px 20px; border:none; border-radius:5px; cursor:pointer; background:#667eea; color:white; margin-top:10px; }
+button:hover { background:#5a67d8; }
+.playlist-item { display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #ddd; cursor:pointer; }
+.playlist-item.active { background:#667eea; color:white; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- Login Form -->
+<div id="loginContainer" class="login-container">
+<h2>Login</h2>
+<input type="text" id="loginUsername" placeholder="Username" required>
+<input type="password" id="loginPassword" placeholder="Password" required>
+<button id="loginBtn">Login</button>
+<p>Don't have an account? <button id="showSignupBtn">Sign Up</button></p>
+</div>
+
+<!-- Signup Form -->
+<div id="signupContainer" class="login-container" style="display:none;">
+<h2>Sign Up</h2>
+<input type="text" id="signupUsername" placeholder="Username" required>
+<input type="email" id="signupEmail" placeholder="Email" required>
+<input type="password" id="signupPassword" placeholder="Password" required>
+<input type="password" id="signupConfirm" placeholder="Confirm Password" required>
+<button id="signupBtn">Create Account</button>
+<p>Already have an account? <button id="showLoginBtn">Login</button></p>
+</div>
+
+<!-- Music Player -->
+<div id="playerContainer" class="player-container">
+<h2 id="welcomeMsg"></h2>
+<button id="logoutBtn" style="background:#ff6b6b;">Logout</button>
+
+<h3>Add YouTube URL:</h3>
+<input type="text" id="urlInput" placeholder="Paste YouTube URL">
+<button id="addUrlBtn">Add to Playlist</button>
+
+<h3>Playlist</h3>
+<div id="playlistContainer"></div>
+
+<h3>Now Playing</h3>
+<iframe id="videoPlayer" width="100%" height="315" src="" frameborder="0" allowfullscreen></iframe>
+</div>
+</div>
+
+<script>
+// --- Users Storage ---
+let users = [{username:'admin', password:'password', email:'admin@example.com'}];
+let currentUser = null;
+
+// --- Playlist ---
+let playlist = [];
+let currentTrack = 0;
+
+// --- Elements ---
+const loginContainer = document.getElementById('loginContainer');
+const signupContainer = document.getElementById('signupContainer');
+const playerContainer = document.getElementById('playerContainer');
+const loginBtn = document.getElementById('loginBtn');
+const signupBtn = document.getElementById('signupBtn');
+const showSignupBtn = document.getElementById('showSignupBtn');
+const showLoginBtn = document.getElementById('showLoginBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+const welcomeMsg = document.getElementById('welcomeMsg');
+const urlInput = document.getElementById('urlInput');
+const addUrlBtn = document.getElementById('addUrlBtn');
+const playlistContainer = document.getElementById('playlistContainer');
+const videoPlayer = document.getElementById('videoPlayer');
+
+// --- Show/Hide Forms ---
+showSignupBtn.onclick = ()=>{ loginContainer.style.display='none'; signupContainer.style.display='block'; }
+showLoginBtn.onclick = ()=>{ signupContainer.style.display='none'; loginContainer.style.display='block'; }
+
+// --- Signup ---
+signupBtn.onclick = ()=>{
+    const username = document.getElementById('signupUsername').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const password = document.getElementById('signupPassword').value;
+    const confirm = document.getElementById('signupConfirm').value;
+
+    if(password!==confirm){ alert('Passwords do not match'); return; }
+    if(users.find(u=>u.username===username)){ alert('Username exists'); return; }
+    users.push({username,email,password});
+    alert('Account created!');
+    signupContainer.style.display='none';
+    loginContainer.style.display='block';
+    document.getElementById('loginUsername').value=username;
+}
+
+// --- Login ---
+loginBtn.onclick = ()=>{
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const user = users.find(u=>u.username===username && u.password===password);
+    if(user){
+        currentUser=user;
+        loginContainer.style.display='none';
+        playerContainer.style.display='block';
+        welcomeMsg.textContent = `Welcome, ${currentUser.username}!`;
+        renderPlaylist();
+    }else{ alert('Invalid username/password'); }
+}
+
+// --- Logout ---
+logoutBtn.onclick = ()=>{
+    currentUser=null;
+    playerContainer.style.display='none';
+    loginContainer.style.display='block';
+    playlist=[];
+    videoPlayer.src='';
+}
+
+// --- Add URL ---
+addUrlBtn.onclick = ()=>{
+    const url = urlInput.value.trim();
+    const id = extractVideoId(url);
+    if(!id){ alert('Invalid URL'); return; }
+    playlist.push({id, title:'YouTube Video'});
+    renderPlaylist();
+    urlInput.value='';
+}
+
+// --- Extract Video ID ---
+function extractVideoId(url){
+    const match = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    return match?match[1]:null;
+}
+
+// --- Render Playlist ---
+function renderPlaylist(){
+    playlistContainer.innerHTML='';
+    playlist.forEach((track,i)=>{
+        const div=document.createElement('div');
+        div.textContent=track.title;
+        div.className='playlist-item'+(i===currentTrack?' active':'');
+        div.onclick=()=>{ playTrack(i); }
+        playlistContainer.appendChild(div);
+    });
+}
+
+// --- Play Track ---
+function playTrack(index){
+    currentTrack=index;
+    const track = playlist[index];
+    videoPlayer.src = `https://www.youtube.com/embed/${track.id}?autoplay=1`;
+    renderPlaylist();
+}
+</script>
+</body>
+</html>
