@@ -20,19 +20,34 @@
     .chat-msg { margin:4px 0; }
     .chat-user { font-weight:bold; color:#1b4c7a; }
     .chat-admin { color:#ad4400; }
+    .signup-section { margin-bottom: 24px; }
+    .link-btn { background:none; border:none; color:#1b4c7a; text-decoration:underline; cursor:pointer; font-size:1em; }
   </style>
 </head>
 <body>
   <div class="player-container" id="playerContainer">
     <h2>Music Player</h2>
 
-    <!-- Login Section -->
+    <!-- Login/Signup Section -->
     <div id="loginSection">
       <div class="flex">
         <input id="loginUsername" class="input" placeholder="Username">
         <input id="loginPassword" class="input" type="password" placeholder="Password">
         <button id="loginBtn" class="btn">Login</button>
+        <button id="showSignupBtn" class="link-btn">Sign up</button>
       </div>
+      <div id="loginError" style="color:red; margin-top:6px;"></div>
+    </div>
+    <div id="signupSection" class="signup-section" style="display:none;">
+      <div class="flex">
+        <input id="signupUsername" class="input" placeholder="Username">
+        <input id="signupPassword" class="input" type="password" placeholder="Password">
+        <input id="signupEmail" class="input" placeholder="Email (optional)">
+        <button id="signupBtn" class="btn">Sign up</button>
+        <button id="showLoginBtn" class="link-btn">Back to Login</button>
+      </div>
+      <div id="signupError" style="color:red; margin-top:6px;"></div>
+      <div id="signupSuccess" style="color:green; margin-top:6px;"></div>
     </div>
     <div id="userSection" style="display:none;">
       <span id="welcomeMsg"></span>
@@ -80,16 +95,6 @@
         <ul id="userList"></ul>
       </div>
 
-      <!-- Add New User -->
-      <div style="margin-top:18px;">
-        <h4>Add New User</h4>
-        <input type="text" id="newUserUsername" class="input" placeholder="Username">
-        <input type="password" id="newUserPassword" class="input" placeholder="Password">
-        <input type="email" id="newUserEmail" class="input" placeholder="Email (optional)">
-        <button id="addUserBtn" class="btn btn-sm">Add User</button>
-        <span id="addUserStatus" style="color:green; margin-left:10px;"></span>
-      </div>
-
       <!-- Playlist Management -->
       <div>
         <h4>Playlist Management</h4>
@@ -100,6 +105,17 @@
       <div>
         <h4>Song Requests</h4>
         <ul id="adminRequests"></ul>
+      </div>
+
+      <!-- Split Chat With Users -->
+      <div>
+        <h4>Chats With Users</h4>
+        <select id="adminChatSelect"></select>
+        <div id="adminChatBox" class="chat-box"></div>
+        <div class="flex">
+          <input id="adminChatInput" class="input" placeholder="Type a message...">
+          <button id="adminChatSendBtn" class="btn btn-sm">Send</button>
+        </div>
       </div>
 
       <!-- Broadcast Message -->
@@ -123,13 +139,26 @@
     let currentUser = null;
     let broadcastMessage = '';
     let songRequests = [];
-    let chatMessages = [];
+    // Split chat: { [username]: [{sender, text}] }
+    let chatMessages = {};
 
     // --- Elements ---
     const loginSection = document.getElementById('loginSection');
     const loginBtn = document.getElementById('loginBtn');
     const loginUsername = document.getElementById('loginUsername');
     const loginPassword = document.getElementById('loginPassword');
+    const loginError = document.getElementById('loginError');
+    // Signup
+    const signupSection = document.getElementById('signupSection');
+    const signupUsername = document.getElementById('signupUsername');
+    const signupPassword = document.getElementById('signupPassword');
+    const signupEmail = document.getElementById('signupEmail');
+    const signupBtn = document.getElementById('signupBtn');
+    const showSignupBtn = document.getElementById('showSignupBtn');
+    const showLoginBtn = document.getElementById('showLoginBtn');
+    const signupError = document.getElementById('signupError');
+    const signupSuccess = document.getElementById('signupSuccess');
+
     const userSection = document.getElementById('userSection');
     const welcomeMsg = document.getElementById('welcomeMsg');
     const logoutBtn = document.getElementById('logoutBtn');
@@ -149,16 +178,50 @@
     const requestSongInput = document.getElementById('requestSongInput');
     const requestSongBtn = document.getElementById('requestSongBtn');
     const requestStatus = document.getElementById('requestStatus');
-    // Add new user
-    const newUserUsername = document.getElementById('newUserUsername');
-    const newUserPassword = document.getElementById('newUserPassword');
-    const newUserEmail = document.getElementById('newUserEmail');
-    const addUserBtn = document.getElementById('addUserBtn');
-    const addUserStatus = document.getElementById('addUserStatus');
+
     // Chat
     const chatBox = document.getElementById('chatBox');
     const chatInput = document.getElementById('chatInput');
     const chatSendBtn = document.getElementById('chatSendBtn');
+
+    // Admin chat split
+    const adminChatSelect = document.getElementById('adminChatSelect');
+    const adminChatBox = document.getElementById('adminChatBox');
+    const adminChatInput = document.getElementById('adminChatInput');
+    const adminChatSendBtn = document.getElementById('adminChatSendBtn');
+
+    // --- Signup Logic ---
+    showSignupBtn.onclick = () => {
+      loginSection.style.display = 'none';
+      signupSection.style.display = '';
+      signupError.textContent = '';
+      signupSuccess.textContent = '';
+    };
+    showLoginBtn.onclick = () => {
+      loginSection.style.display = '';
+      signupSection.style.display = 'none';
+      loginError.textContent = '';
+    };
+    signupBtn.onclick = () => {
+      const username = signupUsername.value.trim();
+      const password = signupPassword.value.trim();
+      const email = signupEmail.value.trim();
+      signupError.textContent = '';
+      signupSuccess.textContent = '';
+      if (!username || !password) {
+        signupError.textContent = 'Username and password required.';
+        return;
+      }
+      if (users.find(u => u.username === username)) {
+        signupError.textContent = 'Username already exists.';
+        return;
+      }
+      users.push({ username, password, email });
+      signupSuccess.textContent = 'Signup successful! You can now login.';
+      signupUsername.value = '';
+      signupPassword.value = '';
+      signupEmail.value = '';
+    };
 
     // --- User Remember/Auto-login Logic ---
     function autoLogin() {
@@ -166,31 +229,10 @@
       if (storedUser) {
         currentUser = JSON.parse(storedUser);
         loginSection.style.display = 'none';
+        signupSection.style.display = 'none';
         userSection.style.display = '';
         welcomeMsg.textContent = `Welcome, ${currentUser.username}!`;
-        // Show/hide add/request song sections
-        if (currentUser.username === 'admin') {
-          addSongSection.style.display = '';
-          requestSongSection.style.display = 'none';
-          adminSection.style.display = 'block';
-          renderUserList();
-          renderAdminPlaylist();
-          renderRequests();
-        } else {
-          addSongSection.style.display = 'none';
-          requestSongSection.style.display = '';
-          adminSection.style.display = 'none';
-        }
-        renderPlaylist();
-        renderChat();
-        // Show broadcast if set
-        if (broadcastMessage) {
-          broadcastMsg.style.display = 'block';
-          broadcastMsg.textContent = broadcastMessage;
-        } else {
-          broadcastMsg.style.display = 'none';
-          broadcastMsg.textContent = '';
-        }
+        showUserUI();
       }
     }
 
@@ -198,44 +240,26 @@
     loginBtn.onclick = () => {
       const un = loginUsername.value.trim();
       const pw = loginPassword.value.trim();
+      loginError.textContent = '';
       const found = users.find(u => u.username === un && u.password === pw);
       if (!found) {
-        alert('Invalid credentials');
+        loginError.textContent = 'Invalid credentials';
         return;
       }
       currentUser = found;
       localStorage.setItem('currentUser', JSON.stringify(currentUser));
       loginSection.style.display = 'none';
+      signupSection.style.display = 'none';
       userSection.style.display = '';
       welcomeMsg.textContent = `Welcome, ${currentUser.username}!`;
-      if (currentUser.username === 'admin') {
-        addSongSection.style.display = '';
-        requestSongSection.style.display = 'none';
-        adminSection.style.display = 'block';
-        renderUserList();
-        renderAdminPlaylist();
-        renderRequests();
-      } else {
-        addSongSection.style.display = 'none';
-        requestSongSection.style.display = '';
-        adminSection.style.display = 'none';
-      }
-      renderPlaylist();
-      renderChat();
-      // Show broadcast if set
-      if (broadcastMessage) {
-        broadcastMsg.style.display = 'block';
-        broadcastMsg.textContent = broadcastMessage;
-      } else {
-        broadcastMsg.style.display = 'none';
-        broadcastMsg.textContent = '';
-      }
+      showUserUI();
     };
 
     logoutBtn.onclick = () => {
       currentUser = null;
       localStorage.removeItem('currentUser');
       loginSection.style.display = '';
+      signupSection.style.display = 'none';
       userSection.style.display = 'none';
       adminSection.style.display = 'none';
       addSongSection.style.display = 'none';
@@ -244,6 +268,34 @@
       renderPlaylist();
       chatBox.innerHTML = '';
     };
+
+    function showUserUI() {
+      if (!currentUser) return;
+      if (currentUser.username === 'admin') {
+        addSongSection.style.display = '';
+        requestSongSection.style.display = 'none';
+        adminSection.style.display = 'block';
+        renderUserList();
+        renderAdminPlaylist();
+        renderRequests();
+        renderAdminChatSelect();
+        renderAdminChat();
+      } else {
+        addSongSection.style.display = 'none';
+        requestSongSection.style.display = '';
+        adminSection.style.display = 'none';
+        renderChat();
+      }
+      renderPlaylist();
+      // Show broadcast if set
+      if (broadcastMessage) {
+        broadcastMsg.style.display = 'block';
+        broadcastMsg.textContent = broadcastMessage;
+      } else {
+        broadcastMsg.style.display = 'none';
+        broadcastMsg.textContent = '';
+      }
+    }
 
     // --- Playlist Logic (admin only) ---
     addUrlBtn.onclick = () => {
@@ -358,32 +410,6 @@
       });
     }
 
-    // --- Add New User (Admin Only) ---
-    addUserBtn.onclick = () => {
-      const username = newUserUsername.value.trim();
-      const password = newUserPassword.value.trim();
-      const email = newUserEmail.value.trim();
-
-      if (!username || !password) {
-        addUserStatus.style.color = "red";
-        addUserStatus.textContent = "Username and password required.";
-        return;
-      }
-      if (users.find(u => u.username === username)) {
-        addUserStatus.style.color = "red";
-        addUserStatus.textContent = "Username already exists.";
-        return;
-      }
-      users.push({ username, password, email });
-      addUserStatus.style.color = "green";
-      addUserStatus.textContent = "User added!";
-      newUserUsername.value = '';
-      newUserPassword.value = '';
-      newUserEmail.value = '';
-      renderUserList();
-      setTimeout(() => addUserStatus.textContent = '', 2000);
-    };
-
     // --- Playlist Management (Admin Only) ---
     function renderAdminPlaylist() {
       adminPlaylist.innerHTML = '';
@@ -418,10 +444,12 @@
       setTimeout(() => broadcastStatus.textContent = '', 2000);
     };
 
-    // --- Chat Functionality (Everyone, with admin) ---
+    // --- Split Chat Functionality ---
     function renderChat() {
+      if (!currentUser) return;
       chatBox.innerHTML = '';
-      chatMessages.forEach(msg => {
+      const msgs = chatMessages[currentUser.username] || [];
+      msgs.forEach(msg => {
         const div = document.createElement('div');
         div.className = 'chat-msg';
         if (msg.sender === 'admin') {
@@ -435,21 +463,62 @@
     }
 
     chatSendBtn.onclick = () => {
+      if (!currentUser) return;
       const txt = chatInput.value.trim();
-      if (!txt || !currentUser) return;
-      chatMessages.push({sender: currentUser.username, text: txt});
+      if (!txt) return;
+      if (!chatMessages[currentUser.username]) chatMessages[currentUser.username] = [];
+      chatMessages[currentUser.username].push({sender: currentUser.username, text: txt});
       chatInput.value = '';
       renderChat();
+      renderAdminChat();
     };
 
-    // For admin, allow reply as admin to users
-    chatBox.addEventListener('click', function(e){
-      if (currentUser && currentUser.username === 'admin' && e.target.classList.contains('chat-user') && !e.target.classList.contains('chat-admin')) {
-        const user = e.target.textContent.replace(':', '');
-        chatInput.value = `@${user} `;
-        chatInput.focus();
+    // Admin: select user to chat with
+    function renderAdminChatSelect() {
+      // Show only users who have chatted or who exist (besides admin)
+      adminChatSelect.innerHTML = '';
+      users.forEach(u => {
+        if (u.username === 'admin') return;
+        const option = document.createElement('option');
+        option.value = u.username;
+        option.textContent = u.username + (chatMessages[u.username] && chatMessages[u.username].length > 0 ? ' (chatted)' : '');
+        adminChatSelect.appendChild(option);
+      });
+    }
+
+    adminChatSelect.onchange = renderAdminChat;
+    function renderAdminChat() {
+      const uname = adminChatSelect.value;
+      adminChatBox.innerHTML = '';
+      if (!uname) return;
+      const msgs = chatMessages[uname] || [];
+      msgs.forEach(msg => {
+        const div = document.createElement('div');
+        div.className = 'chat-msg';
+        if (msg.sender === 'admin') {
+          div.innerHTML = `<span class="chat-user chat-admin">Admin:</span> ${msg.text}`;
+        } else {
+          div.innerHTML = `<span class="chat-user">${msg.sender}:</span> ${msg.text}`;
+        }
+        adminChatBox.appendChild(div);
+      });
+      adminChatBox.scrollTop = adminChatBox.scrollHeight;
+    }
+
+    adminChatSendBtn.onclick = () => {
+      const uname = adminChatSelect.value;
+      if (!uname) return;
+      const txt = adminChatInput.value.trim();
+      if (!txt) return;
+      if (!chatMessages[uname]) chatMessages[uname] = [];
+      chatMessages[uname].push({sender: 'admin', text: txt});
+      adminChatInput.value = '';
+      renderAdminChat();
+      // If this user is logged in, update their chat view live
+      if (currentUser && currentUser.username === uname) {
+        renderChat();
       }
-    });
+    };
 
     // --- Hide Add/Request Song Section for Non-logged-in Users ---
     addSongSection.style.display = 'none';
