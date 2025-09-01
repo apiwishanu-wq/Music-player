@@ -243,11 +243,61 @@
     .track-info { font-size: 1.2em; font-weight: 600; margin-bottom: 10px; }
     .track-artist { opacity: 0.9; }
     
+    .search-results {
+      background: white; border-radius: 12px; 
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      max-height: 300px; overflow-y: auto;
+      border: 2px solid #e2e8f0;
+    }
+    
+    .search-item {
+      padding: 15px; border-bottom: 1px solid #f1f5f9;
+      cursor: pointer; transition: all 0.3s ease;
+      display: flex; align-items: center; gap: 15px;
+    }
+    
+    .search-item:hover {
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      transform: translateX(5px);
+    }
+    
+    .search-item:last-child { border-bottom: none; }
+    
+    .search-thumbnail {
+      width: 60px; height: 45px; background: #e2e8f0;
+      border-radius: 8px; display: flex; align-items: center;
+      justify-content: center; color: #64748b; font-size: 1.2em;
+    }
+    
+    .search-info {
+      flex: 1;
+    }
+    
+    .search-title {
+      font-weight: 600; color: #1e293b; margin-bottom: 4px;
+    }
+    
+    .search-artist {
+      color: #64748b; font-size: 0.9em;
+    }
+    
+    .search-duration {
+      color: #94a3b8; font-size: 0.8em;
+      background: #f1f5f9; padding: 4px 8px; border-radius: 12px;
+    }
+    
+    .search-loading {
+      text-align: center; padding: 30px; color: #64748b;
+      animation: pulse 1.5s infinite;
+    }
+    
     @media (max-width: 768px) {
       .player-container { margin: 10px; padding: 20px; }
       .form-group { flex-direction: column; }
       .input { margin-bottom: 10px; }
       .video-container iframe { height: 250px; }
+      .search-item { flex-direction: column; text-align: center; }
+      .search-thumbnail { margin-bottom: 10px; }
     }
   </style>
 </head>
@@ -313,10 +363,25 @@
     <!-- Song Request Section (Regular Users) -->
     <div id="requestSongSection" class="song-section" style="display:none;">
       <h4>🎤 Request a Song</h4>
-      <div class="form-group">
-        <input id="requestSongInput" class="input" placeholder="Paste YouTube link or song title">
-        <button id="requestSongBtn" class="btn">Send Request</button>
+      
+      <!-- Search Function -->
+      <div style="margin-bottom: 20px;">
+        <div class="form-group">
+          <input id="searchInput" class="input" placeholder="Search for songs, artists, or albums...">
+          <button id="searchBtn" class="btn">🔍 Search</button>
+        </div>
+        <div id="searchResults" style="margin-top: 15px;"></div>
       </div>
+      
+      <!-- Manual Request -->
+      <div style="border-top: 2px solid #e2e8f0; padding-top: 20px;">
+        <h5 style="margin-top: 0; color: #666;">Or paste a direct link:</h5>
+        <div class="form-group">
+          <input id="requestSongInput" class="input" placeholder="Paste YouTube link or song title">
+          <button id="requestSongBtn" class="btn">Send Request</button>
+        </div>
+      </div>
+      
       <span id="requestStatus" class="success-msg"></span>
     </div>
 
@@ -424,6 +489,25 @@
     let broadcastMessage = '';
     let songRequests = [];
     let chatMessages = {};
+    
+    // Sample music database for search functionality
+    let musicDatabase = [
+      { id: 'dQw4w9WgXcQ', title: 'Never Gonna Give You Up', artist: 'Rick Astley', duration: '3:33', genre: 'Pop' },
+      { id: 'kJQP7kiw5Fk', title: 'Despacito', artist: 'Luis Fonsi ft. Daddy Yankee', duration: '3:47', genre: 'Latin Pop' },
+      { id: '9bZkp7q19f0', title: 'Gangnam Style', artist: 'PSY', duration: '3:39', genre: 'K-Pop' },
+      { id: 'fJ9rUzIMcZQ', title: 'Bohemian Rhapsody', artist: 'Queen', duration: '5:55', genre: 'Rock' },
+      { id: 'hTWKbfoikeg', title: 'Smells Like Teen Spirit', artist: 'Nirvana', duration: '5:01', genre: 'Grunge' },
+      { id: 'SlPhMPnQ58k', title: 'Uptown Funk', artist: 'Mark Ronson ft. Bruno Mars', duration: '4:30', genre: 'Funk' },
+      { id: 'RgKAFK5djSk', title: 'Wrecking Ball', artist: 'Miley Cyrus', duration: '3:41', genre: 'Pop' },
+      { id: 'YQHsXMglC9A', title: 'Hello', artist: 'Adele', duration: '4:55', genre: 'Soul' },
+      { id: 'CevxZvSJLk8', title: 'Roar', artist: 'Katy Perry', duration: '3:43', genre: 'Pop' },
+      { id: 'JGwWNGJdvx8', title: 'Shape of You', artist: 'Ed Sheeran', duration: '3:53', genre: 'Pop' },
+      { id: 'xuCn8ux2gbs', title: 'Thinking Out Loud', artist: 'Ed Sheeran', duration: '4:41', genre: 'Pop' },
+      { id: 'pAgnJDJN4VA', title: 'Someone Like You', artist: 'Adele', duration: '4:45', genre: 'Soul' },
+      { id: 'nfs8NYg7yQM', title: 'Radioactive', artist: 'Imagine Dragons', duration: '3:06', genre: 'Alternative Rock' },
+      { id: 'mbLp5VcaT9E', title: 'Believers', artist: 'Imagine Dragons', duration: '3:24', genre: 'Alternative Rock' },
+      { id: 'T4cdfRohhcg', title: 'Blinding Lights', artist: 'The Weeknd', duration: '3:20', genre: 'Synth-pop' }
+    ];
 
     // --- DOM Elements ---
     const loginSection = document.getElementById('loginSection');
@@ -459,6 +543,11 @@
     const requestSongInput = document.getElementById('requestSongInput');
     const requestSongBtn = document.getElementById('requestSongBtn');
     const requestStatus = document.getElementById('requestStatus');
+    
+    // Search elements
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const searchResults = document.getElementById('searchResults');
 
     // Chat elements
     const chatBox = document.getElementById('chatBox');
@@ -717,6 +806,89 @@
       updateNowPlaying();
     }
 
+    // --- Song Search Functionality ---
+    searchBtn.onclick = performSearch;
+    searchInput.onkeypress = (e) => {
+      if (e.key === 'Enter') performSearch();
+    };
+
+    function performSearch() {
+      const query = searchInput.value.trim().toLowerCase();
+      if (!query) {
+        searchResults.innerHTML = '';
+        return;
+      }
+      
+      // Show loading state
+      searchResults.innerHTML = '<div class="search-results"><div class="search-loading">🔍 Searching for songs...</div></div>';
+      
+      // Simulate search delay for realism
+      setTimeout(() => {
+        const results = musicDatabase.filter(song => 
+          song.title.toLowerCase().includes(query) ||
+          song.artist.toLowerCase().includes(query) ||
+          song.genre.toLowerCase().includes(query)
+        );
+        
+        displaySearchResults(results, query);
+      }, 800);
+    }
+
+    function displaySearchResults(results, query) {
+      if (results.length === 0) {
+        searchResults.innerHTML = `
+          <div class="search-results">
+            <div class="search-empty">
+              No songs found for "${query}"<br>
+              <small>Try searching for artist name, song title, or genre</small>
+            </div>
+          </div>
+        `;
+        return;
+      }
+      
+      let html = '<div class="search-results">';
+      results.forEach(song => {
+        html += `
+          <div class="search-item" onclick="requestFromSearch('${song.id}', '${song.title}', '${song.artist}')">
+            <div class="search-thumbnail">🎵</div>
+            <div class="search-info">
+              <div class="search-title">${song.title}</div>
+              <div class="search-artist">${song.artist} • ${song.genre}</div>
+            </div>
+            <div class="search-duration">${song.duration}</div>
+          </div>
+        `;
+      });
+      html += '</div>';
+      
+      searchResults.innerHTML = html;
+    }
+
+    function requestFromSearch(id, title, artist) {
+      if (!currentUser) return;
+      
+      const fullTitle = `${title} - ${artist}`;
+      const youtubeUrl = `https://www.youtube.com/watch?v=${id}`;
+      
+      songRequests.push({
+        user: currentUser.username,
+        request: youtubeUrl,
+        title: fullTitle,
+        timestamp: new Date()
+      });
+      
+      showStatus(requestStatus, `"${title}" requested successfully!`);
+      
+      // Clear search
+      searchInput.value = '';
+      searchResults.innerHTML = '';
+      
+      // Update admin view
+      renderRequests();
+      updateAdminStats();
+    }
+
     // --- Song Requests ---
     requestSongBtn.onclick = () => {
       const request = requestSongInput.value.trim();
@@ -745,10 +917,16 @@
       
       songRequests.forEach((sr, idx) => {
         const li = document.createElement('li');
+        const displayTitle = sr.title || sr.request;
+        const isYouTubeLink = getYouTubeId(sr.request);
+        
         li.innerHTML = `
           <div>
-            <strong>${sr.user}</strong>: ${sr.request}
-            <div style="font-size:0.8em; opacity:0.7;">${formatTime(sr.timestamp)}</div>
+            <strong>${sr.user}</strong>: ${displayTitle}
+            <div style="font-size:0.8em; opacity:0.7;">
+              ${formatTime(sr.timestamp)}
+              ${isYouTubeLink ? '• 🔗 YouTube Link' : '• 📝 Text Request'}
+            </div>
           </div>
           <div style="display:flex; gap:8px;">
             <button class="btn btn-success btn-sm" onclick="approveRequest(${idx})">✓ Add</button>
@@ -762,10 +940,11 @@
     function approveRequest(idx) {
       const request = songRequests[idx];
       const id = getYouTubeId(request.request);
+      const title = request.title || (id ? extractYouTubeTitle(request.request) : request.request);
       
       playlist.push({
         id: id || '',
-        title: id ? extractYouTubeTitle(request.request) : request.request,
+        title: title,
         addedBy: request.user,
         addedAt: new Date()
       });
@@ -776,6 +955,11 @@
       renderPlaylist();
       updateAdminStats();
       updateNowPlaying();
+      
+      // Auto-play if this is the first song
+      if (playlist.length === 1) {
+        playTrack(0);
+      }
     }
 
     function dismissRequest(idx) {
@@ -1121,6 +1305,7 @@
     window.deleteUser = deleteUser;
     window.removeFromPlaylist = removeFromPlaylist;
     window.playTrack = playTrack;
+    window.requestFromSearch = requestFromSearch;
   </script>
 </body>
 </html>
