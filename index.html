@@ -1,1334 +1,756 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>YouTube Music Player</title>
-    <!-- YouTube API -->
     <script src="https://apis.google.com/js/api.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .login-container {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-            width: 100%;
-            max-width: 400px;
-            margin: 0 auto;
-        }
-
-        .player-container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-            overflow: hidden;
-            display: none;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-            color: white;
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .logout-btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-        }
-
-        .login-form h2 {
-            text-align: center;
-            margin-bottom: 30px;
-            color: #333;
-            font-size: 28px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #555;
-            font-weight: 500;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e1e5e9;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 10px;
-        }
-
-        .signup-link {
-            background: transparent;
-            color: #667eea;
-            border: 2px solid #667eea;
-            padding: 8px 20px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            font-size: 14px;
-        }
-
-        .signup-link:hover {
-            background: #667eea;
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        .form-group small {
-            font-size: 12px;
-            margin-top: 4px;
-            display: block;
-        }
-
-        .success-message {
-            background: linear-gradient(135deg, #10ac84, #1dd1a1);
-            color: white;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: 500;
-        }
-
-        .error-message {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-            color: white;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: 500;
-        }
-
-        .search-section {
-            padding: 30px;
-            background: white;
-        }
-
-        .search-container {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .search-input {
-            flex: 1;
-            padding: 15px 20px;
-            border: 2px solid #e1e5e9;
-            border-radius: 25px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .search-btn {
-            padding: 15px 30px;
-            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .search-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 15px rgba(255, 107, 107, 0.3);
-        }
-
-        .video-player {
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-        .player-status {
-            text-align: center;
-            padding: 15px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
-
-        .video-player iframe {
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 600px;
-            height: 400px;
-        }
-
-        .now-playing {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            display: none;
-        }
-
-        .now-playing.active {
-            display: block;
-        }
-
-        .now-playing-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .now-playing-info img {
-            width: 60px;
-            height: 60px;
-            border-radius: 8px;
-            object-fit: cover;
-        }
-
-        .now-playing-details h4 {
-            margin-bottom: 5px;
-            color: #333;
-        }
-
-        .now-playing-details p {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .playlist {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 20px;
-        }
-
-        .playlist h3 {
-            margin-bottom: 20px;
-            color: #333;
-            font-size: 20px;
-        }
-
-        .playlist-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 15px;
-            background: white;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-
-        .playlist-item:hover {
-            transform: translateX(5px);
-            border-color: #667eea;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .playlist-item.active {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-        }
-
-        .playlist-item img {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 8px;
-        }
-
-        .track-info h4 {
-            margin-bottom: 5px;
-            font-size: 16px;
-        }
-
-        .track-info p {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .remove-btn {
-            background: #ff6b6b;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            font-size: 12px;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .remove-btn:hover {
-            background: #ee5a24;
-            transform: scale(1.1);
-        }
-
-        .playlist-item.active .remove-btn {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        .playlist-item.active .remove-btn:hover {
-            background: rgba(255, 255, 255, 0.5);
-        }
-
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin: 20px 0;
-        }
-
-        .control-btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .control-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .url-input-container {
-            margin-bottom: 20px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 15px;
-        }
-
-        .url-input-container h4 {
-            margin-bottom: 10px;
-            color: #333;
-        }
-
-        .url-input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e1e5e9;
-            border-radius: 10px;
-            font-size: 14px;
-            margin-bottom: 10px;
-            transition: all 0.3s ease;
-        }
-
-        .url-input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .url-input:valid {
-            border-color: #10ac84;
-        }
-
-        .debug-info {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 8px;
-            margin: 10px 0;
-            font-family: monospace;
-            font-size: 12px;
-            color: #666;
-            border-left: 4px solid #667eea;
-        }
-
-        .add-btn {
-            background: linear-gradient(135deg, #10ac84, #1dd1a1);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .search-results {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .search-results h4 {
-            margin-bottom: 15px;
-            color: #333;
-        }
-
-        .search-result-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 12px;
-            background: white;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-
-        .search-result-item:hover {
-            transform: translateX(5px);
-            border-color: #667eea;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .search-result-item img {
-            width: 80px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 8px;
-        }
-
-        .search-result-info {
-            flex: 1;
-        }
-
-        .search-result-info h5 {
-            margin-bottom: 5px;
-            color: #333;
-            font-size: 14px;
-            line-height: 1.3;
-        }
-
-        .search-result-info p {
-            color: #666;
-            font-size: 12px;
-            margin-bottom: 2px;
-        }
-
-        .add-to-playlist-btn {
-            background: linear-gradient(135deg, #10ac84, #1dd1a1);
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 12px;
-            transition: all 0.3s ease;
-        }
-
-        .add-to-playlist-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 10px rgba(16, 172, 132, 0.3);
-        }
-
-        .loading-spinner {
-            text-align: center;
-            padding: 20px;
-            color: #666;
-        }
-
-        .api-info {
-            background: linear-gradient(135deg, #ffa502, #ff6348);
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .api-info a {
-            color: white;
-            text-decoration: underline;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 10px;
-            }
-            
-            .search-container {
-                flex-direction: column;
-            }
-            
-            .video-player iframe {
-                width: 100%;
-                height: 250px;
-            }
-        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+        .container{width:100%;max-width:1200px;margin:0 auto}
+        .login-container{background:rgba(255,255,255,.95);padding:40px;border-radius:20px;box-shadow:0 20px 40px rgba(0,0,0,.1);backdrop-filter:blur(10px);width:100%;max-width:400px;margin:0 auto}
+        .player-container{background:rgba(255,255,255,.95);border-radius:20px;box-shadow:0 20px 40px rgba(0,0,0,.1);backdrop-filter:blur(10px);overflow:hidden;display:none;padding-bottom:20px}
+        .header{background:linear-gradient(135deg,#ff6b6b,#ee5a24);color:#fff;padding:20px;display:flex;justify-content:space-between;align-items:center}
+        .logo{font-size:20px;font-weight:700;display:flex;align-items:center;gap:10px}
+        .logout-btn{background:rgba(255,255,255,.2);border:none;color:white;padding:8px 16px;border-radius:20px;cursor:pointer;transition:.3s}
+        .logout-btn:hover{background:rgba(255,255,255,.3);transform:translateY(-2px)}
+        .search-section{padding:30px;background:#fff}
+        .search-container{display:flex;gap:15px;margin-bottom:20px}
+        .search-input{flex:1;padding:15px 20px;border:2px solid #e1e5e9;border-radius:25px;font-size:16px}
+        .search-btn{padding:15px 30px;background:linear-gradient(135deg,#ff6b6b,#ee5a24);color:#fff;border:none;border-radius:25px;cursor:pointer;font-weight:600}
+        .video-player{margin-bottom:20px;text-align:center}
+        .player-status{padding:12px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;border-radius:10px;margin-bottom:15px;font-weight:600}
+        .video-player iframe{border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,.1);width:100%;max-width:600px;height:400px}
+        .now-playing{background:#f8f9fa;padding:15px;border-radius:10px;margin-bottom:20px;display:none}
+        .now-playing.active{display:block}
+        .now-playing-info{display:flex;align-items:center;gap:15px}
+        .now-playing-info img{width:60px;height:60px;border-radius:8px;object-fit:cover}
+        .playlist{background:#f8f9fa;border-radius:15px;padding:20px;margin-bottom:20px}
+        .playlist h3{margin-bottom:20px;color:#333;font-size:20px}
+        .playlist-item{display:flex;align-items:center;gap:15px;padding:12px;background:white;border-radius:10px;margin-bottom:10px;cursor:pointer;transition:all .2s;border:2px solid transparent}
+        .playlist-item:hover{transform:translateX(5px);border-color:#667eea;box-shadow:0 5px 15px rgba(0,0,0,.08)}
+        .playlist-item img{width:60px;height:60px;object-fit:cover;border-radius:8px}
+        .track-info h4{margin-bottom:5px;font-size:16px}
+        .track-info p{color:#666;font-size:14px}
+        .remove-btn{background:#ff6b6b;color:white;border:none;padding:8px 12px;border-radius:50%;cursor:pointer;font-weight:bold;transition:all .2s;font-size:12px;width:30px;height:30px;display:flex;align-items:center;justify-content:center}
+        .controls{display:flex;justify-content:center;gap:15px;margin:20px 0}
+        .control-btn{background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;padding:12px 20px;border-radius:25px;cursor:pointer;font-weight:600}
+        .url-input-container{margin-bottom:20px;padding:20px;background:#f8f9fa;border-radius:15px}
+        .url-input{width:100%;padding:12px 16px;border:2px solid #e1e5e9;border-radius:10px;font-size:14px;margin-bottom:10px}
+        .add-btn{background:linear-gradient(135deg,#10ac84,#1dd1a1);color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600}
+        .search-results{background:#f8f9fa;border-radius:15px;padding:20px;margin-bottom:20px}
+        .request-container{background:#f8f9fa;border-radius:15px;padding:15px;margin-top:10px}
+        .admin-panel{background:#fff;border-radius:12px;padding:15px;border:2px solid #f0f0f0;margin-top:10px}
+        .admin-panel h3{margin-bottom:10px}
+        .request-item{display:flex;align-items:center;gap:10px;padding:10px;background:#fff;border-radius:8px;margin-bottom:8px;border:1px solid #eee}
+        .request-item small{color:#666}
+        .user-list p{margin-bottom:6px;color:#333}
+        .debug-info{background:#f8f9fa;padding:10px;border-radius:8px;margin:10px 0;font-family:monospace;font-size:12px;color:#666;border-left:4px solid #667eea}
+        @media (max-width:768px){.search-container{flex-direction:column}.video-player iframe{height:250px}}
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Login Form -->
-        <div id="loginContainer" class="login-container">
-            <form class="login-form" id="loginForm">
-                <h2>🎵 Music Player Login</h2>
-                <div class="form-group">
-                    <label for="loginUsername">Username</label>
-                    <input type="text" id="loginUsername" name="loginUsername" required>
-                </div>
-                <div class="form-group">
-                    <label for="loginPassword">Password</label>
-                    <input type="password" id="loginPassword" name="loginPassword" required>
-                </div>
-                <button type="submit" class="login-btn">Login to Music Player</button>
-                <div style="text-align: center; margin-top: 20px;">
-                    <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
-                        Don't have an account?
-                    </p>
-                    <button type="button" class="signup-link" id="showSignupBtn">Create Account</button>
-                </div>
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-top: 20px;">
-                    <p style="text-align: center; margin-bottom: 10px; color: #333; font-weight: 600;">
-                        Demo Accounts Available:
-                    </p>
-                    <div style="font-size: 12px; color: #666; line-height: 1.4;">
-                        <strong>admin</strong> / password<br>
-                        <strong>musiclover</strong> / 123456<br>
-                        <strong>dj_mike</strong> / djmike<br>
-                        <strong>sarah_beats</strong> / sarah123<br>
-                        <strong>rockfan</strong> / rock2024
-                    </div>
-                </div>
-            </form>
-        </div>
-
-        <!-- Signup Form -->
-        <div id="signupContainer" class="login-container" style="display: none;">
-            <form class="login-form" id="signupForm">
-                <h2>🎵 Create Account</h2>
-                <div class="form-group">
-                    <label for="signupUsername">Username</label>
-                    <input type="text" id="signupUsername" name="signupUsername" required minlength="3">
-                    <small style="color: #666;">At least 3 characters</small>
-                </div>
-                <div class="form-group">
-                    <label for="signupEmail">Email</label>
-                    <input type="email" id="signupEmail" name="signupEmail" required>
-                </div>
-                <div class="form-group">
-                    <label for="signupPassword">Password</label>
-                    <input type="password" id="signupPassword" name="signupPassword" required minlength="6">
-                    <small style="color: #666;">At least 6 characters</small>
-                </div>
-                <div class="form-group">
-                    <label for="confirmPassword">Confirm Password</label>
-                    <input type="password" id="confirmPassword" name="confirmPassword" required>
-                </div>
-                <div class="form-group">
-                    <label for="fullName">Full Name (Optional)</label>
-                    <input type="text" id="fullName" name="fullName">
-                </div>
-                <button type="submit" class="login-btn">Create Account</button>
-                <div style="text-align: center; margin-top: 20px;">
-                    <p style="color: #666; font-size: 14px; margin-bottom: 10px;">
-                        Already have an account?
-                    </p>
-                    <button type="button" class="signup-link" id="showLoginBtn">Back to Login</button>
-                </div>
-            </form>
-        </div>
-
-        <!-- Music Player -->
-        <div id="playerContainer" class="player-container">
-            <div class="header">
-                <div class="logo">
-                    🎵 YouTube Music Player
-                </div>
-                <button class="logout-btn" id="logoutBtn">Logout</button>
+<div class="container">
+    <!-- Login Form -->
+    <div id="loginContainer" class="login-container">
+        <form class="login-form" id="loginForm">
+            <h2>🎵 Music Player Login</h2>
+            <div class="form-group">
+                <label for="loginUsername">Username</label>
+                <input type="text" id="loginUsername" name="loginUsername" required>
             </div>
-
-            <div class="search-section">
-                <div class="api-info">
-                    <strong>🔑 YouTube Music Player</strong><br>
-                    Ready to play with 8+ sample tracks loaded! Add your own YouTube videos or try the demo accounts.<br>
-                    Search feature requires YouTube Data API key for full functionality.
-                </div>
-                <div class="search-container">
-                    <input type="text" class="search-input" id="searchInput" placeholder="Search YouTube for music videos..." />
-                    <button class="search-btn" id="searchBtn">🔍 Search YouTube</button>
-                </div>
-
-                <div id="searchResults" class="search-results" style="display: none;">
-                    <h4>Search Results:</h4>
-                    <div id="searchResultsContainer"></div>
-                </div>
-
-                <div class="url-input-container">
-                    <h4>Add YouTube Video to Playlist:</h4>
-                    <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
-                        Paste any YouTube URL (e.g., https://www.youtube.com/watch?v=dQw4w9WgXcQ)
-                    </p>
-                    <input type="text" class="url-input" id="urlInput" 
-                           placeholder="Paste YouTube URL here..." 
-                           value="" />
-                    <button class="add-btn" id="addUrlBtn">+ Add to Playlist</button>
-                    <div style="margin-top: 10px;">
-                        <small style="color: #999;">
-                            <strong>Try these working examples:</strong><br>
-                            • https://www.youtube.com/watch?v=jNQXAC9IVRw<br>
-                            • https://youtu.be/jNQXAC9IVRw<br>
-                            • jNQXAC9IVRw (just the video ID)<br><br>
-                            <strong>Note:</strong> Some videos may be restricted from embedding.
-                        </small>
-                    </div>
-                </div>
-
-                <div class="video-player">
-                    <div id="playerStatus" class="player-status">Ready to play music! 🎵</div>
-                    <div id="nowPlaying" class="now-playing">
-                        <div class="now-playing-info">
-                            <img id="nowPlayingImage" src="" alt="Now Playing">
-                            <div class="now-playing-details">
-                                <h4 id="nowPlayingTitle">No track selected</h4>
-                                <p id="nowPlayingArtist">Select a song to play</p>
-                            </div>
-                        </div>
-                    </div>
-                    <iframe id="videoPlayer" width="600" height="400" frameborder="0" allowfullscreen 
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                            src=""></iframe>
-                </div>
-
-                <div class="controls">
-                    <button class="control-btn" id="prevBtn">⏮ Previous</button>
-                    <button class="control-btn" id="playPauseBtn">⏸ Pause</button>
-                    <button class="control-btn" id="nextBtn">Next ⏭</button>
-                </div>
-
-                <div class="playlist">
-                    <h3>🎵 Your Playlist</h3>
-                    <div id="playlistContainer">
-                        <!-- Playlist items will be added here -->
-                    </div>
+            <div class="form-group">
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword" name="loginPassword" required>
+            </div>
+            <button type="submit" class="login-btn">Login to Music Player</button>
+            <div style="text-align:center;margin-top:20px;">
+                <p style="color:#666;font-size:14px;margin-bottom:15px;">Don't have an account?</p>
+                <button type="button" class="signup-link" id="showSignupBtn">Create Account</button>
+            </div>
+            <div style="background:#f8f9fa;padding:15px;border-radius:10px;margin-top:20px;">
+                <p style="text-align:center;margin-bottom:10px;color:#333;font-weight:600;">Demo Accounts Available:</p>
+                <div style="font-size:12px;color:#666;line-height:1.4;">
+                    <strong>admin</strong> / password<br>
+                    <strong>musiclover</strong> / 123456<br>
+                    <strong>dj_mike</strong> / djmike<br>
+                    <strong>sarah_beats</strong> / sarah123<br>
+                    <strong>rockfan</strong> / rock2024
                 </div>
             </div>
-        </div>
+        </form>
     </div>
 
-    <script>
-        class MusicPlayer {
-            constructor() {
-                this.playlist = [];
-                this.currentTrack = 0;
-                this.isLoggedIn = false;
-                this.users = this.loadUsers();
-                this.currentUser = null;
-                this.youtubeApiKey = null; // Set this to your YouTube API key
-                this.isYouTubeAPIReady = false;
-                this.initializeElements();
-                this.bindEvents();
-                this.loadSamplePlaylist();
-                this.initializeYouTubeAPI();
-            }
+    <!-- Signup Form -->
+    <div id="signupContainer" class="login-container" style="display:none;">
+        <form class="login-form" id="signupForm">
+            <h2>🎵 Create Account</h2>
+            <div class="form-group">
+                <label for="signupUsername">Username</label>
+                <input type="text" id="signupUsername" name="signupUsername" required minlength="3">
+                <small style="color:#666;">At least 3 characters</small>
+            </div>
+            <div class="form-group">
+                <label for="signupEmail">Email</label>
+                <input type="email" id="signupEmail" name="signupEmail" required>
+            </div>
+            <div class="form-group">
+                <label for="signupPassword">Password</label>
+                <input type="password" id="signupPassword" name="signupPassword" required minlength="6">
+                <small style="color:#666;">At least 6 characters</small>
+            </div>
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" required>
+            </div>
+            <div class="form-group">
+                <label for="fullName">Full Name (Optional)</label>
+                <input type="text" id="fullName" name="fullName">
+            </div>
+            <button type="submit" class="login-btn">Create Account</button>
+            <div style="text-align:center;margin-top:20px;">
+                <p style="color:#666;font-size:14px;margin-bottom:10px;">Already have an account?</p>
+                <button type="button" class="signup-link" id="showLoginBtn">Back to Login</button>
+            </div>
+        </form>
+    </div>
 
-            loadUsers() {
-                // Default users for demo with more variety
-                return [
-                    { username: 'admin', password: 'password', email: 'admin@example.com', fullName: 'Admin User', createdAt: '2024-01-01' },
-                    { username: 'musiclover', password: '123456', email: 'music@example.com', fullName: 'Music Lover', createdAt: '2024-02-15' },
-                    { username: 'dj_mike', password: 'djmike', email: 'mike@example.com', fullName: 'DJ Mike', createdAt: '2024-03-10' },
-                    { username: 'sarah_beats', password: 'sarah123', email: 'sarah@example.com', fullName: 'Sarah Johnson', createdAt: '2024-04-05' },
-                    { username: 'rockfan', password: 'rock2024', email: 'rock@example.com', fullName: 'Rock Fan', createdAt: '2024-05-20' }
-                ];
-            }
+    <!-- Music Player -->
+    <div id="playerContainer" class="player-container">
+        <div class="header">
+            <div class="logo">🎵 YouTube Music Player</div>
+            <div style="display:flex;gap:12px;align-items:center">
+                <div id="userBadge" style="color:#fff;font-weight:600"></div>
+                <button class="logout-btn" id="logoutBtn">Logout</button>
+            </div>
+        </div>
 
-            initializeYouTubeAPI() {
-                // Initialize YouTube API (demo mode without API key)
-                if (typeof gapi !== 'undefined') {
-                    gapi.load('client', () => {
-                        // In production, you would initialize with your API key:
-                        // gapi.client.init({
-                        //     apiKey: this.youtubeApiKey,
-                        //     discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest']
-                        // }).then(() => {
-                        //     this.isYouTubeAPIReady = true;
-                        // });
-                        
-                        // For demo, we'll simulate API readiness
-                        setTimeout(() => {
-                            this.isYouTubeAPIReady = true;
-                            console.log('YouTube API simulation ready');
-                        }, 1000);
-                    });
-                }
-            }
+        <div class="search-section">
+            <div class="api-info">
+                <strong>🔑 YouTube Music Player</strong><br>
+                Ready to play with sample tracks loaded! Add YouTube videos or request songs. Admin can manage requests and push tracks to users.
+            </div>
 
-            initializeElements() {
-                this.loginContainer = document.getElementById('loginContainer');
-                this.signupContainer = document.getElementById('signupContainer');
-                this.playerContainer = document.getElementById('playerContainer');
-                this.loginForm = document.getElementById('loginForm');
-                this.signupForm = document.getElementById('signupForm');
-                this.showSignupBtn = document.getElementById('showSignupBtn');
-                this.showLoginBtn = document.getElementById('showLoginBtn');
-                this.logoutBtn = document.getElementById('logoutBtn');
-                this.searchInput = document.getElementById('searchInput');
-                this.searchBtn = document.getElementById('searchBtn');
-                this.searchResults = document.getElementById('searchResults');
-                this.searchResultsContainer = document.getElementById('searchResultsContainer');
-                this.urlInput = document.getElementById('urlInput');
-                this.addUrlBtn = document.getElementById('addUrlBtn');
-                this.videoPlayer = document.getElementById('videoPlayer');
-                this.playerStatus = document.getElementById('playerStatus');
-                this.nowPlaying = document.getElementById('nowPlaying');
-                this.nowPlayingImage = document.getElementById('nowPlayingImage');
-                this.nowPlayingTitle = document.getElementById('nowPlayingTitle');
-                this.nowPlayingArtist = document.getElementById('nowPlayingArtist');
-                this.playlistContainer = document.getElementById('playlistContainer');
-                this.prevBtn = document.getElementById('prevBtn');
-                this.playPauseBtn = document.getElementById('playPauseBtn');
-                this.nextBtn = document.getElementById('nextBtn');
-            }
+            <div class="search-container" style="margin-top:15px;">
+                <input type="text" class="search-input" id="searchInput" placeholder="Search (placeholder - needs YouTube API key)..." />
+                <button class="search-btn" id="searchBtn">🔍 Search YouTube</button>
+            </div>
 
-            bindEvents() {
-                // Form events
-                this.loginForm.addEventListener('submit', (e) => this.handleLogin(e));
-                this.signupForm.addEventListener('submit', (e) => this.handleSignup(e));
-                this.showSignupBtn.addEventListener('click', () => this.showSignup());
-                this.showLoginBtn.addEventListener('click', () => this.showLogin());
-                this.logoutBtn.addEventListener('click', () => this.handleLogout());
-                
-                // Player events
-                this.searchBtn.addEventListener('click', () => this.handleSearch());
-                this.addUrlBtn.addEventListener('click', () => {
-                    console.log('Add URL button clicked');
-                    this.handleAddUrl();
-                });
-                this.prevBtn.addEventListener('click', () => this.previousTrack());
-                this.nextBtn.addEventListener('click', () => this.nextTrack());
-                this.playPauseBtn.addEventListener('click', () => this.togglePlayPause());
-                
-                // Input events
-                this.searchInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        this.handleSearch();
-                    }
-                });
-                
-                this.urlInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        console.log('Enter pressed in URL input');
-                        this.handleAddUrl();
-                    }
-                });
+            <div id="searchResults" class="search-results" style="display:none;">
+                <h4>Search Results:</h4>
+                <div id="searchResultsContainer"></div>
+            </div>
 
-                // Debug: Log when input changes
-                this.urlInput.addEventListener('input', (e) => {
-                    console.log('URL input changed:', e.target.value);
-                });
-            }
+            <div class="url-input-container">
+                <h4>Add YouTube Video to Playlist</h4>
+                <p style="font-size:12px;color:#666;margin-bottom:10px;">Paste any YouTube URL (ex: https://www.youtube.com/watch?v=dQw4w9WgXcQ) — admin adds to all users, normal users add to their own playlist.</p>
+                <input type="text" class="url-input" id="urlInput" placeholder="Paste YouTube URL here..." />
+                <div style="display:flex;gap:10px;margin-top:8px;">
+                    <button class="add-btn" id="addUrlBtn">+ Add to Playlist</button>
+                    <button class="add-btn" id="addUrlToAllBtn" style="display:none;background:linear-gradient(135deg,#ff9f43,#ff6b6b)">+ Add to All Users</button>
+                </div>
+            </div>
 
-            handleSearch() {
-                const query = this.searchInput.value.trim();
-                if (query) {
-                    // In a real app, you'd use YouTube API here
-                    alert(`Search functionality would query YouTube API for: "${query}"\n\nFor demo purposes, try adding a YouTube URL directly!`);
-                }
-            }
-
-            showSignup() {
-                this.loginContainer.style.display = 'none';
-                this.signupContainer.style.display = 'block';
-                this.clearMessages();
-            }
-
-            showLogin() {
-                this.signupContainer.style.display = 'none';
-                this.loginContainer.style.display = 'block';
-                this.clearMessages();
-            }
-
-            clearMessages() {
-                const messages = document.querySelectorAll('.success-message, .error-message');
-                messages.forEach(msg => msg.remove());
-            }
-
-            showMessage(message, type = 'success') {
-                this.clearMessages();
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `${type}-message`;
-                messageDiv.textContent = message;
-                
-                const activeForm = this.loginContainer.style.display !== 'none' 
-                    ? this.loginContainer.querySelector('.login-form')
-                    : this.signupContainer.querySelector('.login-form');
-                
-                activeForm.insertBefore(messageDiv, activeForm.firstChild);
-                
-                setTimeout(() => messageDiv.remove(), 5000);
-            }
-
-            handleSignup(e) {
-                e.preventDefault();
-                
-                const username = document.getElementById('signupUsername').value.trim();
-                const email = document.getElementById('signupEmail').value.trim();
-                const password = document.getElementById('signupPassword').value;
-                const confirmPassword = document.getElementById('confirmPassword').value;
-                const fullName = document.getElementById('fullName').value.trim();
-
-                // Validation
-                if (password !== confirmPassword) {
-                    this.showMessage('Passwords do not match!', 'error');
-                    return;
-                }
-
-                if (password.length < 6) {
-                    this.showMessage('Password must be at least 6 characters long!', 'error');
-                    return;
-                }
-
-                if (username.length < 3) {
-                    this.showMessage('Username must be at least 3 characters long!', 'error');
-                    return;
-                }
-
-                // Check if username already exists
-                if (this.users.find(user => user.username.toLowerCase() === username.toLowerCase())) {
-                    this.showMessage('Username already exists! Please choose another.', 'error');
-                    return;
-                }
-
-                // Check if email already exists
-                if (this.users.find(user => user.email.toLowerCase() === email.toLowerCase())) {
-                    this.showMessage('Email already registered! Please use another email.', 'error');
-                    return;
-                }
-
-                // Create new user
-                const newUser = {
-                    username: username,
-                    email: email,
-                    password: password, // In a real app, this would be hashed
-                    fullName: fullName || username,
-                    createdAt: new Date().toISOString()
-                };
-
-                this.users.push(newUser);
-                this.saveUsers();
-                
-                this.showMessage('Account created successfully! You can now login.', 'success');
-                
-                // Clear form and switch to login after delay
-                setTimeout(() => {
-                    this.signupForm.reset();
-                    this.showLogin();
-                    document.getElementById('loginUsername').value = username;
-                }, 2000);
-            }
-
-            handleLogin(e) {
-                e.preventDefault();
-                const username = document.getElementById('loginUsername').value.trim();
-                const password = document.getElementById('loginPassword').value;
-                
-                const user = this.users.find(u => 
-                    u.username.toLowerCase() === username.toLowerCase() && u.password === password
-                );
-                
-                if (user) {
-                    this.isLoggedIn = true;
-                    this.currentUser = user;
-                    this.loginContainer.style.display = 'none';
-                    this.playerContainer.style.display = 'block';
-                    
-                    // Update welcome message
-                    const welcomeMsg = document.querySelector('.logo');
-                    welcomeMsg.innerHTML = `🎵 Welcome, ${user.fullName || user.username}!`;
-                    
-                    // Initialize player with first track if available
-                    if (this.playlist.length > 0) {
-                        this.playerStatus.textContent = `Ready to play ${this.playlist.length} tracks! Click any song to start 🎵`;
-                        this.renderPlaylist();
-                    } else {
-                        this.playerStatus.textContent = 'Add some music to get started! 🎵';
-                    }
-                } else {
-                    this.showMessage('Invalid username or password!', 'error');
-                }
-            }
-
-            saveUsers() {
-                try {
-                    // In a real app, you wouldn't store users in memory
-                    // This is just for demo purposes
-                    console.log('User data saved in memory for demo');
-                } catch (error) {
-                    console.log('Note: User data is stored in memory for this demo');
-                }
-            }
-
-            handleLogout() {
-                this.isLoggedIn = false;
-                this.currentUser = null;
-                this.loginContainer.style.display = 'block';
-                this.signupContainer.style.display = 'none';
-                this.playerContainer.style.display = 'none';
-                
-                // Reset form and welcome message
-                document.getElementById('loginUsername').value = '';
-                document.getElementById('loginPassword').value = '';
-                document.querySelector('.logo').innerHTML = '🎵 YouTube Music Player';
-                this.clearMessages();
-            }
-
-            handleSearch() {
-                const query = this.searchInput.value.trim();
-                if (query) {
-                    // In a real app, you'd use YouTube API here
-                    alert(`Search functionality would query YouTube API for: "${query}"\n\nFor demo purposes, try adding a YouTube URL directly!`);
-                }
-            }
-
-            handleAddUrl() {
-                const url = this.urlInput.value.trim();
-                console.log('Attempting to add URL:', url);
-                
-                if (!url) {
-                    this.showMessage('Please enter a YouTube URL!', 'error');
-                    return;
-                }
-                
-                const videoId = this.extractVideoId(url);
-                console.log('Extracted video ID:', videoId);
-                
-                if (videoId) {
-                    // Check if already in playlist
-                    const existingTrack = this.playlist.find(track => track.id === videoId);
-                    if (existingTrack) {
-                        this.showMessage('This video is already in your playlist!', 'error');
-                        return;
-                    }
-
-                    // Create track with basic info
-                    const newTrack = {
-                        id: videoId,
-                        title: `YouTube Video`,
-                        artist: 'YouTube',
-                        thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
-                        url: url
-                    };
-                    
-                    // Try to get video info from YouTube thumbnail API
-                    this.enhanceTrackInfo(newTrack);
-                    
-                    console.log('Adding track:', newTrack);
-                    
-                    this.playlist.push(newTrack);
-                    this.renderPlaylist();
-                    this.urlInput.value = '';
-                    
-                    this.showMessage(`Video added to playlist! Click to play.`, 'success');
-                    
-                    // If this is the first track, update the status
-                    if (this.playlist.length === 1) {
-                        this.playerStatus.textContent = 'Click the track below to start playing! 🎵';
-                    }
-                    
-                } else {
-                    this.showMessage('Invalid YouTube URL! Please check the format and try again.', 'error');
-                    console.log('URL parsing failed for:', url);
-                    
-                    // Show example in console for debugging
-                    console.log('Expected formats:');
-                    console.log('- https://www.youtube.com/watch?v=dQw4w9WgXcQ');
-                    console.log('- https://youtu.be/dQw4w9WgXcQ');
-                    console.log('- dQw4w9WgXcQ (just the video ID)');
-                }
-            }
-
-            enhanceTrackInfo(track) {
-                // In a real app, you'd use YouTube API to get video details
-                // For demo, we'll use some heuristics based on video ID
-                const videoId = track.id;
-                
-                // Update title with video ID for identification
-                track.title = `Video ${videoId.substring(0, 8)}...`;
-                
-                // Try different thumbnail qualities
-                const thumbnailQualities = ['maxresdefault', 'hqdefault', 'mqdefault', 'default'];
-                
-                // Test thumbnail load and fallback if needed
-                const img = new Image();
-                img.onload = () => {
-                    console.log('Thumbnail loaded successfully');
-                };
-                img.onerror = () => {
-                    console.log('Maxres thumbnail failed, falling back to hqdefault');
-                    track.thumbnail = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-                    this.renderPlaylist(); // Re-render with new thumbnail
-                };
-                img.src = track.thumbnail;
-            }
-
-            extractVideoId(url) {
-                console.log('Extracting video ID from:', url);
-                
-                // Clean the URL first
-                url = url.trim();
-                
-                // Handle different YouTube URL formats with more robust patterns
-                const patterns = [
-                    // Standard youtube.com/watch?v=
-                    /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?(?:.*&)?v=([a-zA-Z0-9_-]{11})/,
-                    // Short youtu.be format
-                    /(?:https?:\/\/)?(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]{11})/,
-                    // Embed format
-                    /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
-                    // YouTube mobile format
-                    /(?:https?:\/\/)?(?:m\.)?youtube\.com\/watch\?(?:.*&)?v=([a-zA-Z0-9_-]{11})/,
-                    // Just the video ID (11 characters)
-                    /^([a-zA-Z0-9_-]{11})$/
-                ];
-                
-                for (const pattern of patterns) {
-                    const match = url.match(pattern);
-                    if (match && match[1] && match[1].length === 11) {
-                        console.log('Pattern matched:', pattern, 'ID:', match[1]);
-                        return match[1];
-                    }
-                }
-                
-                console.log('No patterns matched for URL:', url);
-                return null;
-            }
-
-            loadSamplePlaylist() {
-                // Load sample tracks that should work with YouTube embedding
-                this.playlist = [
-                    {
-                        id: 'jNQXAC9IVRw',
-                        title: 'Me at the zoo',
-                        artist: 'jawed',
-                        thumbnail: 'https://img.youtube.com/vi/jNQXAC9IVRw/hqdefault.jpg',
-                        url: 'https://www.youtube.com/watch?v=jNQXAC9IVRw'
-                    },
-                    {
-                        id: 'kJQP7kiw5Fk',
-                        title: 'Despacito',
-                        artist: 'Luis Fonsi ft. Daddy Yankee',
-                        thumbnail: 'https://img.youtube.com/vi/kJQP7kiw5Fk/hqdefault.jpg',
-                        url: 'https://www.youtube.com/watch?v=kJQP7kiw5Fk'
-                    },
-                    {
-                        id: '9bZkp7q19f0',
-                        title: 'Gangnam Style',
-                        artist: 'PSY',
-                        thumbnail: 'https://img.youtube.com/vi/9bZkp7q19f0/hqdefault.jpg',
-                        url: 'https://www.youtube.com/watch?v=9bZkp7q19f0'
-                    },
-                    {
-                        id: 'RgKAFK5djSk',
-                        title: 'Wiz Khalifa - See You Again',
-                        artist: 'Wiz Khalifa ft. Charlie Puth',
-                        thumbnail: 'https://img.youtube.com/vi/RgKAFK5djSk/hqdefault.jpg',
-                        url: 'https://www.youtube.com/watch?v=RgKAFK5djSk'
-                    },
-                    {
-                        id: 'YQHsXMglC9A',
-                        title: 'Hello',
-                        artist: 'Adele',
-                        thumbnail: 'https://img.youtube.com/vi/YQHsXMglC9A/hqdefault.jpg',
-                        url: 'https://www.youtube.com/watch?v=YQHsXMglC9A'
-                    },
-                    {
-                        id: 'CevxZvSJLk8',
-                        title: 'Roar',
-                        artist: 'Katy Perry',
-                        thumbnail: 'https://img.youtube.com/vi/CevxZvSJLk8/hqdefault.jpg',
-                        url: 'https://www.youtube.com/watch?v=CevxZvSJLk8'
-                    },
-                    {
-                        id: 'hT_nvWreIhg',
-                        title: 'Counting Stars',
-                        artist: 'OneRepublic',
-                        thumbnail: 'https://img.youtube.com/vi/hT_nvWreIhg/hqdefault.jpg',
-                        url: 'https://www.youtube.com/watch?v=hT_nvWreIhg'
-                    },
-                    {
-                        id: 'JGwWNGJdvx8',
-                        title: 'Shape of You',
-                        artist: 'Ed Sheeran',
-                        thumbnail: 'https://img.youtube.com/vi/JGwWNGJdvx8/hqdefault.jpg',
-                        url: 'https://www.youtube.com/watch?v=JGwWNGJdvx8'
-                    }
-                ];
-                this.renderPlaylist();
-                console.log('Music player initialized with', this.playlist.length, 'sample tracks');
-            }
-
-            renderPlaylist() {
-                this.playlistContainer.innerHTML = '';
-                
-                if (this.playlist.length === 0) {
-                    this.playlistContainer.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">No tracks in playlist. Add some music!</div>';
-                    return;
-                }
-                
-                this.playlist.forEach((track, index) => {
-                    const playlistItem = document.createElement('div');
-                    playlistItem.className = `playlist-item ${index === this.currentTrack ? 'active' : ''}`;
-                    playlistItem.addEventListener('click', () => this.playTrack(index));
-                    
-                    playlistItem.innerHTML = `
-                        <img src="${track.thumbnail}" alt="${this.escapeHtml(track.title)}" onerror="this.src='data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"60\" height=\"60\" viewBox=\"0 0 60 60\"><rect width=\"60\" height=\"60\" fill=\"%23f0f0f0\"/><text x=\"30\" y=\"35\" text-anchor=\"middle\" fill=\"%23999\" font-family=\"Arial\" font-size=\"12\">🎵</text></svg>'">
-                        <div class="track-info">
-                            <h4>${this.escapeHtml(this.truncateText(track.title, 50))}</h4>
-                            <p>${this.escapeHtml(track.artist)}</p>
+            <div class="video-player">
+                <div id="playerStatus" class="player-status">Ready to play music! 🎵</div>
+                <div id="nowPlaying" class="now-playing">
+                    <div class="now-playing-info">
+                        <img id="nowPlayingImage" src="" alt="Now Playing">
+                        <div class="now-playing-details">
+                            <h4 id="nowPlayingTitle">No track selected</h4>
+                            <p id="nowPlayingArtist">Select a song to play</p>
                         </div>
-                        <button class="remove-btn" onclick="event.stopPropagation(); musicPlayer.removeFromPlaylist(${index})" title="Remove from playlist">
-                            ✕
-                        </button>
-                    `;
-                    
-                    this.playlistContainer.appendChild(playlistItem);
+                    </div>
+                </div>
+                <iframe id="videoPlayer" width="600" height="400" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" src=""></iframe>
+            </div>
+
+            <div class="controls">
+                <button class="control-btn" id="prevBtn">⏮ Previous</button>
+                <button class="control-btn" id="playPauseBtn">⏸ Pause</button>
+                <button class="control-btn" id="nextBtn">Next ⏭</button>
+            </div>
+
+            <div class="playlist">
+                <h3>🎵 Your Playlist</h3>
+                <div id="playlistContainer"></div>
+
+                <div class="request-container" id="requestContainer">
+                    <h4>🎤 Request a Song</h4>
+                    <input type="text" id="requestInput" class="url-input" placeholder="Paste YouTube URL or video ID..." />
+                    <div style="display:flex;gap:10px;margin-top:8px;">
+                        <button class="add-btn" id="requestBtn">Request Song</button>
+                        <div id="requestMessage" style="align-self:center;color:#666;font-size:13px"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Panel (visible only to admin) -->
+            <div id="adminPanel" class="admin-panel" style="display:none;">
+                <h3>🛠️ Admin Panel</h3>
+
+                <!-- Requests Section -->
+                <div style="margin-bottom:12px">
+                    <h4>📥 Song Requests</h4>
+                    <div id="requestList">
+                        <p style="color:#666">No requests yet.</p>
+                    </div>
+                </div>
+
+                <!-- Manage Users Section -->
+                <div style="margin-top:8px">
+                    <h4>👥 Manage Users</h4>
+                    <div id="userList" class="user-list"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    class MusicPlayer {
+        constructor(){
+            // Per-user playlists
+            this.playlists = {}; // { username: [tracks] }
+            this.playlist = []; // current logged-in user's playlist
+            this.currentTrack = 0;
+            this.isLoggedIn = false;
+            this.users = this.loadUsers();
+            this.currentUser = null;
+            this.youtubeApiKey = null;
+            this.isYouTubeAPIReady = false;
+            this.songRequests = []; // global song requests visible to admin
+            this.initializeElements();
+            this.bindEvents();
+            this.loadSamplePlaylistPerUser();
+            this.initializeYouTubeAPI();
+        }
+
+        loadUsers(){
+            // default demo users
+            const users = [
+                { username: 'admin', password: 'password', email: 'admin@example.com', fullName: 'Admin User', createdAt: '2024-01-01' },
+                { username: 'musiclover', password: '123456', email: 'music@example.com', fullName: 'Music Lover', createdAt: '2024-02-15' },
+                { username: 'dj_mike', password: 'djmike', email: 'mike@example.com', fullName: 'DJ Mike', createdAt: '2024-03-10' },
+                { username: 'sarah_beats', password: 'sarah123', email: 'sarah@example.com', fullName: 'Sarah Johnson', createdAt: '2024-04-05' },
+                { username: 'rockfan', password: 'rock2024', email: 'rock@example.com', fullName: 'Rock Fan', createdAt: '2024-05-20' }
+            ];
+            // initialize playlists map
+            users.forEach(u => {
+                if (!this.playlists[u.username]) this.playlists[u.username] = [];
+            });
+            return users;
+        }
+
+        initializeYouTubeAPI(){
+            if (typeof gapi !== 'undefined') {
+                gapi.load('client', () => {
+                    // Demo mode; set isYouTubeAPIReady true after a short delay
+                    setTimeout(()=>{ this.isYouTubeAPIReady = true; console.log('YouTube API simulation ready'); }, 800);
                 });
-            }
-
-            removeFromPlaylist(index) {
-                try {
-                    if (index >= 0 && index < this.playlist.length) {
-                        const removedTrack = this.playlist.splice(index, 1)[0];
-                        
-                        // Adjust current track index if needed
-                        if (index < this.currentTrack) {
-                            this.currentTrack--;
-                        } else if (index === this.currentTrack) {
-                            // If removing current track, play next or previous
-                            if (this.playlist.length > 0) {
-                                if (this.currentTrack >= this.playlist.length) {
-                                    this.currentTrack = 0;
-                                }
-                                this.playTrack(this.currentTrack);
-                            } else {
-                                // No tracks left
-                                this.videoPlayer.src = '';
-                                this.currentTrack = 0;
-                            }
-                        }
-                        
-                        this.renderPlaylist();
-                        this.showMessage(`"${this.truncateText(removedTrack.title, 30)}" removed from playlist!`, 'success');
-                    }
-                } catch (error) {
-                    console.error('Error removing from playlist:', error);
-                    this.showMessage('Error removing track. Please try again.', 'error');
-                }
-            }
-
-            playTrack(index) {
-                try {
-                    if (index >= 0 && index < this.playlist.length) {
-                        this.currentTrack = index;
-                        const track = this.playlist[index];
-                        
-                        console.log('Playing track:', track);
-                        
-                        // Update now playing info
-                        this.updateNowPlaying(track);
-                        
-                        // Create YouTube embed URL with better parameters for loading
-                        const embedUrl = `https://www.youtube.com/embed/${track.id}?autoplay=1&rel=0&modestbranding=1&fs=1&cc_load_policy=0&iv_load_policy=3&autohide=1`;
-                        
-                        console.log('Loading video URL:', embedUrl);
-                        
-                        // Update player status
-                        this.playerStatus.textContent = `🎵 Loading: ${track.title}...`;
-                        
-                        // Load the video with error handling
-                        this.videoPlayer.src = embedUrl;
-                        
-                        // Add load event listener
-                        this.videoPlayer.onload = () => {
-                            console.log('Video loaded successfully');
-                            this.playerStatus.textContent = `🎵 Now Playing: ${track.title}`;
-                            this.playPauseBtn.innerHTML = '⏸ Pause';
-                        };
-                        
-                        // Add error event listener
-                        this.videoPlayer.onerror = (e) => {
-                            console.error('Video load error:', e);
-                            this.playerStatus.textContent = `❌ Could not load: ${track.title}`;
-                            this.showMessage('Video could not be loaded. It may be restricted or unavailable.', 'error');
-                        };
-                        
-                        // Update after a short delay to allow for loading
-                        setTimeout(() => {
-                            if (this.videoPlayer.src === embedUrl) {
-                                this.playerStatus.textContent = `🎵 Now Playing: ${track.title}`;
-                                this.playPauseBtn.innerHTML = '⏸ Pause';
-                            }
-                        }, 2000);
-                        
-                        this.renderPlaylist();
-                        
-                        // Update page title
-                        document.title = `${track.title} - YouTube Music Player`;
-                        
-                        console.log(`Attempting to play: ${track.title} (${track.id})`);
-                    }
-                } catch (error) {
-                    console.error('Error playing track:', error);
-                    this.playerStatus.textContent = '❌ Error playing track';
-                    this.showMessage('Error playing track. The video may be restricted or unavailable.', 'error');
-                }
-            }
-
-            updateNowPlaying(track) {
-                this.nowPlaying.className = 'now-playing active';
-                this.nowPlayingImage.src = track.thumbnail;
-                this.nowPlayingImage.alt = track.title;
-                this.nowPlayingTitle.textContent = this.truncateText(track.title, 50);
-                this.nowPlayingArtist.textContent = track.artist;
-            }
-
-            previousTrack() {
-                if (this.playlist.length === 0) {
-                    this.showMessage('No tracks in playlist!', 'error');
-                    this.playerStatus.textContent = 'No tracks in playlist';
-                    return;
-                }
-                const prevIndex = this.currentTrack > 0 ? this.currentTrack - 1 : this.playlist.length - 1;
-                this.playTrack(prevIndex);
-            }
-
-            nextTrack() {
-                if (this.playlist.length === 0) {
-                    this.showMessage('No tracks in playlist!', 'error');
-                    this.playerStatus.textContent = 'No tracks in playlist';
-                    return;
-                }
-                const nextIndex = (this.currentTrack + 1) % this.playlist.length;
-                this.playTrack(nextIndex);
-            }
-
-            togglePlayPause() {
-                try {
-                    if (this.playlist.length === 0) {
-                        this.showMessage('No tracks in playlist to play!', 'error');
-                        return;
-                    }
-
-                    const currentSrc = this.videoPlayer.src;
-                    
-                    if (!currentSrc) {
-                        // No video loaded, play first track
-                        this.playTrack(this.currentTrack);
-                        return;
-                    }
-
-                    if (currentSrc.includes('autoplay=1')) {
-                        // Currently playing, pause by reloading without autoplay
-                        const pausedUrl = currentSrc.replace('autoplay=1', 'autoplay=0');
-                        this.videoPlayer.src = pausedUrl;
-                        this.playPauseBtn.innerHTML = '▶ Play';
-                        this.playerStatus.textContent = '⏸ Paused';
-                    } else {
-                        // Currently paused, play by reloading with autoplay
-                        const playUrl = currentSrc.replace('autoplay=0', 'autoplay=1');
-                        this.videoPlayer.src = playUrl;
-                        this.playPauseBtn.innerHTML = '⏸ Pause';
-                        const track = this.playlist[this.currentTrack];
-                        this.playerStatus.textContent = `🎵 Playing: ${track.title}`;
-                    }
-                } catch (error) {
-                    console.error('Play/pause error:', error);
-                    this.showMessage('Playback control limited by YouTube embed restrictions. Try clicking a song directly.', 'error');
-                }
             }
         }
 
-        // Initialize the music player when the page loads
-        let musicPlayer;
-        document.addEventListener('DOMContentLoaded', () => {
-            musicPlayer = new MusicPlayer();
-        });
-    </script>
+        initializeElements(){
+            this.loginContainer = document.getElementById('loginContainer');
+            this.signupContainer = document.getElementById('signupContainer');
+            this.playerContainer = document.getElementById('playerContainer');
+            this.loginForm = document.getElementById('loginForm');
+            this.signupForm = document.getElementById('signupForm');
+            this.showSignupBtn = document.getElementById('showSignupBtn');
+            this.showLoginBtn = document.getElementById('showLoginBtn');
+            this.logoutBtn = document.getElementById('logoutBtn');
+            this.searchInput = document.getElementById('searchInput');
+            this.searchBtn = document.getElementById('searchBtn');
+            this.searchResults = document.getElementById('searchResults');
+            this.searchResultsContainer = document.getElementById('searchResultsContainer');
+            this.urlInput = document.getElementById('urlInput');
+            this.addUrlBtn = document.getElementById('addUrlBtn');
+            this.addUrlToAllBtn = document.getElementById('addUrlToAllBtn');
+            this.videoPlayer = document.getElementById('videoPlayer');
+            this.playerStatus = document.getElementById('playerStatus');
+            this.nowPlaying = document.getElementById('nowPlaying');
+            this.nowPlayingImage = document.getElementById('nowPlayingImage');
+            this.nowPlayingTitle = document.getElementById('nowPlayingTitle');
+            this.nowPlayingArtist = document.getElementById('nowPlayingArtist');
+            this.playlistContainer = document.getElementById('playlistContainer');
+            this.prevBtn = document.getElementById('prevBtn');
+            this.playPauseBtn = document.getElementById('playPauseBtn');
+            this.nextBtn = document.getElementById('nextBtn');
+            this.requestContainer = document.getElementById('requestContainer');
+            this.requestInput = document.getElementById('requestInput');
+            this.requestBtn = document.getElementById('requestBtn');
+            this.requestMessage = document.getElementById('requestMessage');
+            this.adminPanel = document.getElementById('adminPanel');
+            this.requestList = document.getElementById('requestList');
+            this.userList = document.getElementById('userList');
+            this.userBadge = document.getElementById('userBadge');
+        }
+
+        bindEvents(){
+            this.loginForm.addEventListener('submit', (e)=>this.handleLogin(e));
+            this.signupForm.addEventListener('submit', (e)=>this.handleSignup(e));
+            this.showSignupBtn.addEventListener('click', ()=>this.showSignup());
+            this.showLoginBtn.addEventListener('click', ()=>this.showLogin());
+            this.logoutBtn.addEventListener('click', ()=>this.handleLogout());
+
+            this.searchBtn.addEventListener('click', ()=>this.handleSearch());
+            this.addUrlBtn.addEventListener('click', ()=>this.handleAddUrl());
+            this.addUrlToAllBtn.addEventListener('click', ()=>this.handleAddUrlToAllUsers());
+
+            this.prevBtn.addEventListener('click', ()=>this.previousTrack());
+            this.nextBtn.addEventListener('click', ()=>this.nextTrack());
+            this.playPauseBtn.addEventListener('click', ()=>this.togglePlayPause());
+
+            this.searchInput.addEventListener('keypress', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); this.handleSearch(); }});
+            this.urlInput.addEventListener('keypress', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); this.handleAddUrl(); }});
+            this.requestInput.addEventListener('keypress', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); this.handleSongRequest(); }});
+            this.requestBtn.addEventListener('click', ()=>this.handleSongRequest());
+        }
+
+        showSignup(){ this.loginContainer.style.display='none'; this.signupContainer.style.display='block'; this.clearMessages(); }
+        showLogin(){ this.signupContainer.style.display='none'; this.loginContainer.style.display='block'; this.clearMessages(); }
+        clearMessages(){ const messages = document.querySelectorAll('.success-message,.error-message'); messages.forEach(m=>m.remove()); }
+        showMessage(message,type='success'){
+            this.clearMessages();
+            const div = document.createElement('div');
+            div.className = `${type}-message`;
+            div.textContent = message;
+            const activeForm = (this.loginContainer.style.display !== 'none') ? this.loginContainer.querySelector('.login-form') : this.signupContainer.querySelector('.login-form');
+            (activeForm || document.body).insertBefore(div,(activeForm || document.body).firstChild);
+            setTimeout(()=>div.remove(),4000);
+        }
+
+        handleSignup(e){
+            e.preventDefault();
+            const username = document.getElementById('signupUsername').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const fullName = document.getElementById('fullName').value.trim();
+            if(password !== confirmPassword){ this.showMessage('Passwords do not match!','error'); return; }
+            if(password.length < 6){ this.showMessage('Password must be at least 6 characters long!','error'); return; }
+            if(username.length < 3){ this.showMessage('Username must be at least 3 characters long!','error'); return; }
+            if(this.users.find(u=>u.username.toLowerCase()===username.toLowerCase())){ this.showMessage('Username already exists!','error'); return; }
+            if(this.users.find(u=>u.email && u.email.toLowerCase()===email.toLowerCase())){ this.showMessage('Email already registered!','error'); return; }
+            const newUser = { username, email, password, fullName: fullName || username, createdAt: new Date().toISOString() };
+            this.users.push(newUser);
+            // create an empty playlist for the new user
+            if(!this.playlists[username]) this.playlists[username] = [];
+            this.saveUsers();
+            this.showMessage('Account created successfully! You can now login.','success');
+            setTimeout(()=>{ this.signupForm.reset(); this.showLogin(); document.getElementById('loginUsername').value = username; }, 1500);
+        }
+
+        handleLogin(e){
+            e.preventDefault();
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const user = this.users.find(u=>u.username.toLowerCase()===username.toLowerCase() && u.password === password);
+            if(user){
+                this.isLoggedIn = true;
+                this.currentUser = user;
+                // set current playlist to user's playlist (create if doesn't exist)
+                if(!this.playlists[user.username]) this.playlists[user.username] = [];
+                this.playlist = this.playlists[user.username];
+                this.loginContainer.style.display='none';
+                this.signupContainer.style.display='none';
+                this.playerContainer.style.display='block';
+                this.userBadge.textContent = user.fullName || user.username;
+                // admin UI
+                if(user.username.toLowerCase() === 'admin'){
+                    this.adminPanel.style.display = 'block';
+                    this.addUrlToAllBtn.style.display = 'inline-block';
+                    this.requestContainer.style.display = 'none'; // admin doesn't request
+                    this.renderUsers();
+                    this.renderRequests();
+                } else {
+                    this.adminPanel.style.display = 'none';
+                    this.addUrlToAllBtn.style.display = 'none';
+                    this.requestContainer.style.display = 'block';
+                }
+                this.renderPlaylist();
+                this.playerStatus.textContent = this.playlist.length>0 ? `Ready to play ${this.playlist.length} tracks! Click a song to start 🎵` : 'Add some music to get started! 🎵';
+            } else {
+                this.showMessage('Invalid username or password!', 'error');
+            }
+        }
+
+        saveUsers(){
+            // demo: users stored in memory only
+            console.log('User data saved in memory for demo');
+        }
+
+        handleLogout(){
+            this.isLoggedIn = false;
+            this.currentUser = null;
+            this.loginContainer.style.display='block';
+            this.signupContainer.style.display='none';
+            this.playerContainer.style.display='none';
+            document.getElementById('loginUsername').value='';
+            document.getElementById('loginPassword').value='';
+            document.querySelector('.logo').innerHTML = '🎵 YouTube Music Player';
+            this.clearMessages();
+        }
+
+        handleSearch(){
+            const q = this.searchInput.value.trim();
+            if(q) alert(`Search would query YouTube API for: "${q}"\n\n(Requires API key and wiring.)`);
+        }
+
+        // When normal user clicks "Add to Playlist" -> goes to own playlist
+        // When admin clicks -> add to all non-admin users by default
+        handleAddUrl(){
+            const url = this.urlInput.value.trim();
+            if(!url){ this.showMessage('Please enter a YouTube URL!', 'error'); return; }
+            const videoId = this.extractVideoId(url);
+            if(!videoId){ this.showMessage('Invalid YouTube URL!','error'); return; }
+            const newTrack = {
+                id: videoId,
+                title: `Video ${videoId.substring(0,8)}...`,
+                artist: 'YouTube',
+                thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+                url,
+                addedBy: this.currentUser ? this.currentUser.username : 'guest'
+            };
+            // If admin -> add to all non-admin users
+            if(this.currentUser && this.currentUser.username.toLowerCase() === 'admin'){
+                this.addTrackToAllNonAdminUsers(newTrack);
+                this.showMessage('Track added to all users!', 'success');
+            } else {
+                // ensure user's playlist exists
+                if(!this.currentUser){ this.showMessage('You must be logged in to add a track', 'error'); return; }
+                if(!this.playlists[this.currentUser.username]) this.playlists[this.currentUser.username] = [];
+                // prevent duplicates for that user
+                const exists = this.playlists[this.currentUser.username].some(t=>t.id === videoId);
+                if(exists){ this.showMessage('This video is already in your playlist!', 'error'); return; }
+                this.playlists[this.currentUser.username].push(newTrack);
+                // refresh local playlist reference
+                this.playlist = this.playlists[this.currentUser.username];
+                this.renderPlaylist();
+                this.showMessage('Video added to your playlist! Click to play.', 'success');
+            }
+            this.urlInput.value = '';
+        }
+
+        // Admin button to explicitly add input URL to all users
+        handleAddUrlToAllUsers(){
+            const url = this.urlInput.value.trim();
+            if(!url){ this.showMessage('Please enter a YouTube URL!', 'error'); return; }
+            const videoId = this.extractVideoId(url);
+            if(!videoId){ this.showMessage('Invalid YouTube URL!','error'); return; }
+            const track = {
+                id: videoId,
+                title: `Video ${videoId.substring(0,8)}...`,
+                artist: 'YouTube',
+                thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+                url,
+                addedBy: 'admin'
+            };
+            this.addTrackToAllNonAdminUsers(track);
+            this.urlInput.value='';
+            this.showMessage('Added to all users by admin!', 'success');
+        }
+
+        addTrackToAllNonAdminUsers(track){
+            Object.keys(this.playlists).forEach(username=>{
+                if(username.toLowerCase() !== 'admin'){
+                    // avoid duplicates per user
+                    if(!this.playlists[username].some(t=>t.id===track.id)){
+                        this.playlists[username].push({...track});
+                    }
+                }
+            });
+            // If current user is non-admin, re-render their playlist
+            if(this.currentUser && this.currentUser.username.toLowerCase() !== 'admin'){
+                this.playlist = this.playlists[this.currentUser.username];
+                this.renderPlaylist();
+            }
+        }
+
+        // Song request flow for users
+        handleSongRequest(){
+            if(!this.currentUser){ this.requestMessage.textContent = 'Please login first.'; return; }
+            const url = this.requestInput.value.trim();
+            if(!url){ this.requestMessage.textContent = 'Enter a YouTube URL or video ID.'; return; }
+            const videoId = this.extractVideoId(url);
+            if(!videoId){ this.requestMessage.textContent = 'Invalid YouTube link.'; return; }
+            const req = {
+                id: videoId,
+                url,
+                requestedBy: this.currentUser.username,
+                time: new Date().toLocaleString()
+            };
+            this.songRequests.push(req);
+            this.requestInput.value='';
+            this.requestMessage.textContent = '✅ Song request sent to admin!';
+            setTimeout(()=>this.requestMessage.textContent='',2500);
+            // if admin is logged in, refresh requests view
+            this.renderRequests();
+        }
+
+        // Admin view: render requests
+        renderRequests(){
+            if(!this.requestList) return;
+            this.requestList.innerHTML = '';
+            if(this.songRequests.length === 0){
+                this.requestList.innerHTML = '<p style="color:#666">No requests yet.</p>';
+                return;
+            }
+            this.songRequests.forEach((req, idx)=>{
+                const div = document.createElement('div');
+                div.className = 'request-item';
+                div.innerHTML = `
+                    <div style="flex:1">
+                        <p style="margin-bottom:6px"><strong>${this.truncateText(req.url,80)}</strong></p>
+                        <small>Requested by ${req.requestedBy} at ${req.time}</small>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:6px">
+                        <button class="add-btn" onclick="musicPlayer.addRequestToUser(${idx}, '${req.requestedBy}')">➕ Add to ${req.requestedBy}</button>
+                        <button class="add-btn" style="background:linear-gradient(135deg,#ff9f43,#ff6b6b)" onclick="musicPlayer.addRequestToAll(${idx})">➕ Add to All</button>
+                        <button class="remove-btn" style="width:auto;padding:6px 8px;border-radius:6px" onclick="musicPlayer.rejectRequest(${idx})">✕ Reject</button>
+                    </div>
+                `;
+                this.requestList.appendChild(div);
+            });
+        }
+
+        addRequestToUser(index, username){
+            const req = this.songRequests[index];
+            if(!req) return;
+            const track = {
+                id: req.id,
+                title: `Requested ${req.id.substring(0,8)}...`,
+                artist: `Requested by ${req.requestedBy}`,
+                thumbnail: `https://img.youtube.com/vi/${req.id}/hqdefault.jpg`,
+                url: req.url,
+                addedBy: 'admin'
+            };
+            if(!this.playlists[username]) this.playlists[username] = [];
+            if(!this.playlists[username].some(t=>t.id===track.id)){
+                this.playlists[username].push(track);
+            }
+            this.songRequests.splice(index,1);
+            this.renderRequests();
+            this.showMessage(`Added to ${username}'s playlist!`, 'success');
+            // If the added user is the currently logged-in user, re-render their playlist
+            if(this.currentUser && this.currentUser.username === username){
+                this.playlist = this.playlists[username];
+                this.renderPlaylist();
+            }
+        }
+
+        addRequestToAll(index){
+            const req = this.songRequests[index];
+            if(!req) return;
+            const track = {
+                id: req.id,
+                title: `Requested ${req.id.substring(0,8)}...`,
+                artist: `Requested by ${req.requestedBy}`,
+                thumbnail: `https://img.youtube.com/vi/${req.id}/hqdefault.jpg`,
+                url: req.url,
+                addedBy: 'admin'
+            };
+            this.addTrackToAllNonAdminUsers(track);
+            this.songRequests.splice(index,1);
+            this.renderRequests();
+            this.showMessage('Added requested track to all users!', 'success');
+        }
+
+        rejectRequest(index){
+            const req = this.songRequests.splice(index,1);
+            this.renderRequests();
+            this.showMessage('Request rejected.', 'success');
+        }
+
+        // Admin user list rendering
+        renderUsers(){
+            if(!this.userList) return;
+            this.userList.innerHTML = '';
+            this.users.forEach(u=>{
+                this.userList.innerHTML += `<p>👤 ${u.username} (${u.email || 'no-email'})</p>`;
+            });
+        }
+
+        extractVideoId(url){
+            url = (url||'').trim();
+            const patterns = [
+                /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?(?:.*&)?v=([a-zA-Z0-9_-]{11})/,
+                /(?:https?:\/\/)?(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]{11})/,
+                /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+                /(?:https?:\/\/)?(?:m\.)?youtube\.com\/watch\?(?:.*&)?v=([a-zA-Z0-9_-]{11})/,
+                /^([a-zA-Z0-9_-]{11})$/
+            ];
+            for(const p of patterns){
+                const m = url.match(p);
+                if(m && m[1] && m[1].length === 11) return m[1];
+            }
+            return null;
+        }
+
+        // initialize demo sample playlists per user (non-admin)
+        loadSamplePlaylistPerUser(){
+            const sample = [
+                {id:'jNQXAC9IVRw', title:'Me at the zoo', artist:'jawed'},
+                {id:'kJQP7kiw5Fk', title:'Despacito', artist:'Luis Fonsi ft. Daddy Yankee'},
+                {id:'9bZkp7q19f0', title:'Gangnam Style', artist:'PSY'},
+                {id:'RgKAFK5djSk', title:'See You Again', artist:'Wiz Khalifa ft. Charlie Puth'},
+                {id:'YQHsXMglC9A', title:'Hello', artist:'Adele'},
+                {id:'CevxZvSJLk8', title:'Roar', artist:'Katy Perry'},
+                {id:'hT_nvWreIhg', title:'Counting Stars', artist:'OneRepublic'},
+                {id:'JGwWNGJdvx8', title:'Shape of You', artist:'Ed Sheeran'}
+            ];
+            Object.keys(this.playlists).forEach(username=>{
+                if(username.toLowerCase() !== 'admin'){
+                    // populate with samples (avoid duplicates)
+                    sample.forEach(s=>{
+                        if(!this.playlists[username].some(t=>t.id===s.id)){
+                            this.playlists[username].push({
+                                id:s.id,
+                                title:s.title,
+                                artist:s.artist,
+                                thumbnail:`https://img.youtube.com/vi/${s.id}/hqdefault.jpg`,
+                                url:`https://www.youtube.com/watch?v=${s.id}`,
+                                addedBy:'system'
+                            });
+                        }
+                    });
+                }
+            });
+            console.log('Sample playlists loaded for users.');
+        }
+
+        renderPlaylist(){
+            this.playlistContainer.innerHTML = '';
+            if(!this.playlist || this.playlist.length === 0){
+                this.playlistContainer.innerHTML = '<div style="text-align:center;color:#666;padding:20px;">No tracks in playlist. Add some music or request songs!</div>';
+                return;
+            }
+            this.playlist.forEach((track, index)=>{
+                const playlistItem = document.createElement('div');
+                playlistItem.className = `playlist-item ${index===this.currentTrack?'active':''}`;
+                playlistItem.addEventListener('click', ()=>this.playTrack(index));
+                const safeTitle = this.escapeHtml(this.truncateText(track.title,50));
+                const safeArtist = this.escapeHtml(track.artist || '');
+                playlistItem.innerHTML = `
+                    <img src="${track.thumbnail}" alt="${safeTitle}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22><rect width=%2260%22 height=%2260%22 fill=%23f0f0f0/><text x=%2230%22 y=%2235%22 text-anchor=%22middle%22 fill=%23999%22 font-family=%22Arial%22 font-size=%2212%22>🎵</text></svg>'">
+                    <div class="track-info">
+                        <h4>${safeTitle}</h4>
+                        <p>${safeArtist}</p>
+                    </div>
+                    <button class="remove-btn" onclick="event.stopPropagation(); musicPlayer.removeFromPlaylist(${index})" title="Remove from playlist">✕</button>
+                `;
+                this.playlistContainer.appendChild(playlistItem);
+            });
+        }
+
+        removeFromPlaylist(index){
+            try{
+                if(index>=0 && index < this.playlist.length){
+                    const removed = this.playlist.splice(index,1)[0];
+                    // also remove from the master playlists map for current user
+                    if(this.currentUser && this.playlists[this.currentUser.username]){
+                        this.playlists[this.currentUser.username] = this.playlist;
+                    }
+                    // adjust currentTrack
+                    if(index < this.currentTrack) this.currentTrack--;
+                    else if(index === this.currentTrack){
+                        if(this.playlist.length > 0){
+                            if(this.currentTrack >= this.playlist.length) this.currentTrack = 0;
+                            this.playTrack(this.currentTrack);
+                        } else {
+                            this.videoPlayer.src = '';
+                            this.currentTrack = 0;
+                            this.playerStatus.textContent = 'No tracks in playlist';
+                        }
+                    }
+                    this.renderPlaylist();
+                    this.showMessage(`"${this.truncateText(removed.title,30)}" removed from playlist!`, 'success');
+                }
+            }catch(err){
+                console.error('Error removing from playlist:',err);
+                this.showMessage('Error removing track','error');
+            }
+        }
+
+        playTrack(index){
+            try{
+                if(index>=0 && index < this.playlist.length){
+                    this.currentTrack = index;
+                    const track = this.playlist[index];
+                    this.updateNowPlaying(track);
+                    const embedUrl = `https://www.youtube.com/embed/${track.id}?autoplay=1&rel=0&modestbranding=1&fs=1&cc_load_policy=0&iv_load_policy=3&autohide=1`;
+                    this.playerStatus.textContent = `🎵 Loading: ${track.title}...`;
+                    this.videoPlayer.src = embedUrl;
+                    this.videoPlayer.onload = ()=>{ this.playerStatus.textContent = `🎵 Now Playing: ${track.title}`; this.playPauseBtn.innerHTML = '⏸ Pause'; };
+                    this.videoPlayer.onerror = (e)=>{ this.playerStatus.textContent = `❌ Could not load: ${track.title}`; this.showMessage('Video could not be loaded; maybe restricted.','error'); };
+                    setTimeout(()=>{ if(this.videoPlayer.src === embedUrl){ this.playerStatus.textContent = `🎵 Now Playing: ${track.title}`; this.playPauseBtn.innerHTML='⏸ Pause'; }}, 1000);
+                    this.renderPlaylist();
+                    document.title = `${track.title} - YouTube Music Player`;
+                }
+            }catch(err){
+                console.error('Error playing track:',err);
+                this.playerStatus.textContent = '❌ Error playing track';
+                this.showMessage('Error playing track','error');
+            }
+        }
+
+        updateNowPlaying(track){
+            this.nowPlaying.className = 'now-playing active';
+            this.nowPlayingImage.src = track.thumbnail;
+            this.nowPlayingImage.alt = track.title;
+            this.nowPlayingTitle.textContent = this.truncateText(track.title,50);
+            this.nowPlayingArtist.textContent = track.artist || '';
+        }
+
+        previousTrack(){
+            if(!this.playlist || this.playlist.length === 0){ this.showMessage('No tracks in playlist!','error'); this.playerStatus.textContent='No tracks in playlist'; return; }
+            const prev = this.currentTrack>0?this.currentTrack-1:this.playlist.length-1;
+            this.playTrack(prev);
+        }
+
+        nextTrack(){
+            if(!this.playlist || this.playlist.length === 0){ this.showMessage('No tracks in playlist!','error'); this.playerStatus.textContent='No tracks in playlist'; return; }
+            const next = (this.currentTrack+1) % this.playlist.length;
+            this.playTrack(next);
+        }
+
+        togglePlayPause(){
+            try{
+                if(!this.playlist || this.playlist.length === 0){ this.showMessage('No tracks in playlist to play!','error'); return; }
+                const currentSrc = this.videoPlayer.src;
+                if(!currentSrc){ this.playTrack(this.currentTrack); return; }
+                if(currentSrc.includes('autoplay=1')){
+                    const pausedUrl = currentSrc.replace('autoplay=1','autoplay=0');
+                    this.videoPlayer.src = pausedUrl;
+                    this.playPauseBtn.innerHTML = '▶ Play';
+                    this.playerStatus.textContent = '⏸ Paused';
+                } else {
+                    const playUrl = currentSrc.replace('autoplay=0','autoplay=1');
+                    this.videoPlayer.src = playUrl;
+                    this.playPauseBtn.innerHTML = '⏸ Pause';
+                    const t = this.playlist[this.currentTrack];
+                    this.playerStatus.textContent = `🎵 Playing: ${t.title}`;
+                }
+            }catch(err){
+                console.error('Play/pause error:',err);
+                this.showMessage('Playback control limited by YouTube embed restrictions. Click song directly.','error');
+            }
+        }
+
+        // helpers
+        truncateText(s, n){ if(!s) return ''; return s.length>n? s.substring(0,n-1)+'…': s; }
+        escapeHtml(unsafe){ return (unsafe||'').replace(/[&<>"'`=\/]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'}[c]; }); }
+
+    }
+
+    // init
+    let musicPlayer;
+    document.addEventListener('DOMContentLoaded', ()=>{
+        musicPlayer = new MusicPlayer();
+    });
+</script>
 </body>
 </html>
