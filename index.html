@@ -1,1311 +1,1334 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>StreamVibe - Music Player</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { 
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      margin: 0; padding: 0; min-height: 100vh;
-    }
-    
-    .player-container { 
-      max-width: 800px; margin: 20px auto; 
-      background: rgba(255,255,255,0.95); 
-      backdrop-filter: blur(10px);
-      padding: 30px; border-radius: 20px; 
-      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-      animation: slideIn 0.5s ease-out;
-    }
-    
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .logo { 
-      text-align: center; margin-bottom: 30px;
-      background: linear-gradient(45deg, #667eea, #764ba2);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text; color: transparent;
-      font-size: 2.5em; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    .auth-section {
-      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-      padding: 25px; border-radius: 15px; margin-bottom: 20px;
-      color: white; box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-    }
-    
-    .form-group { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-    .input { 
-      padding: 12px 16px; border: none; border-radius: 25px; 
-      font-size: 1em; background: rgba(255,255,255,0.9);
-      transition: all 0.3s ease; outline: none; flex: 1; min-width: 120px;
-    }
-    .input:focus { 
-      background: white; transform: scale(1.02);
-      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    }
-    
-    .btn { 
-      padding: 12px 24px; border-radius: 25px; border: none; 
-      background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
-      color: white; cursor: pointer; font-weight: 600;
-      transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px;
-    }
-    .btn:hover { 
-      transform: translateY(-2px); 
-      box-shadow: 0 10px 20px rgba(79, 172, 254, 0.4);
-    }
-    .btn:active { transform: translateY(0); }
-    
-    .btn-danger { 
-      background: linear-gradient(45deg, #ff416c 0%, #ff4b2b 100%);
-    }
-    .btn-danger:hover { 
-      box-shadow: 0 10px 20px rgba(255, 65, 108, 0.4);
-    }
-    
-    .btn-success {
-      background: linear-gradient(45deg, #56ab2f 0%, #a8e6cf 100%);
-    }
-    
-    .btn-sm { padding: 8px 16px; font-size: 0.9em; }
-    
-    .link-btn { 
-      background: none; border: none; color: rgba(255,255,255,0.9); 
-      text-decoration: underline; cursor: pointer; font-size: 1em;
-      transition: color 0.3s ease;
-    }
-    .link-btn:hover { color: white; }
-    
-    .user-section {
-      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-      padding: 20px; border-radius: 15px; margin-bottom: 20px;
-      display: flex; justify-content: space-between; align-items: center;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-    
-    .welcome-msg { 
-      font-size: 1.3em; font-weight: 600; 
-      color: #2d3748; text-shadow: 1px 1px 2px rgba(255,255,255,0.5);
-    }
-    
-    .broadcast-msg { 
-      background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-      color: #8b4513; padding: 15px; border-radius: 12px; margin: 20px 0;
-      border-left: 5px solid #ff8c00; animation: pulse 2s infinite;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-    
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.8; }
-    }
-    
-    .video-container {
-      position: relative; margin: 20px 0;
-      background: #000; border-radius: 15px; overflow: hidden;
-      box-shadow: 0 15px 30px rgba(0,0,0,0.3);
-    }
-    
-    .video-container iframe {
-      width: 100%; height: 400px; border: none;
-    }
-    
-    .playlist-container {
-      background: linear-gradient(135deg, #e3ffe7 0%, #d9e7ff 100%);
-      border-radius: 15px; padding: 20px; margin: 20px 0;
-      max-height: 300px; overflow-y: auto;
-      box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
-    }
-    
-    .playlist-item { 
-      padding: 12px 16px; margin: 8px 0; cursor: pointer; 
-      border-radius: 10px; transition: all 0.3s ease;
-      background: rgba(255,255,255,0.7);
-      border-left: 4px solid transparent;
-    }
-    .playlist-item:hover { 
-      background: rgba(255,255,255,0.9); 
-      transform: translateX(5px);
-      border-left-color: #667eea;
-    }
-    .playlist-item.active { 
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white; font-weight: 600;
-      border-left-color: #fff;
-      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-    }
-    
-    .song-section {
-      background: linear-gradient(135deg, #fff5f5 0%, #f0fff4 100%);
-      padding: 20px; border-radius: 15px; margin: 20px 0;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-    
-    .chat-section {
-      background: linear-gradient(135deg, #f8f9ff 0%, #fff8f8 100%);
-      padding: 20px; border-radius: 15px; margin: 20px 0;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-    
-    .chat-box { 
-      background: white; border: 2px solid #e2e8f0; 
-      border-radius: 12px; padding: 15px; max-height: 200px; 
-      overflow-y: auto; margin-bottom: 15px;
-      box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
-    }
-    
-    .chat-msg { 
-      margin: 8px 0; padding: 8px 12px; border-radius: 8px;
-      background: rgba(102, 126, 234, 0.1);
-      animation: fadeIn 0.3s ease;
-    }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .chat-user { font-weight: 600; }
-    .chat-admin { color: #e53e3e; }
-    .chat-timestamp { color: #718096; font-size: 0.8em; margin-left: 8px; }
-    
-    .admin-section {
-      background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
-      color: white; padding: 25px; border-radius: 15px; margin: 30px 0;
-      box-shadow: 0 15px 30px rgba(0,0,0,0.2);
-    }
-    
-    .admin-section h3, .admin-section h4 { 
-      color: #63b3ed; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-    }
-    
-    .admin-list {
-      background: rgba(255,255,255,0.05); border-radius: 10px; 
-      padding: 15px; margin: 15px 0; max-height: 200px; overflow-y: auto;
-    }
-    
-    .admin-list li {
-      padding: 10px; margin: 8px 0; background: rgba(255,255,255,0.1);
-      border-radius: 8px; display: flex; justify-content: space-between; align-items: center;
-    }
-    
-    .status-msg { 
-      margin-left: 15px; font-weight: 600; 
-      animation: fadeIn 0.5s ease;
-    }
-    
-    .error-msg { color: #fc8181; }
-    .success-msg { color: #68d391; }
-    
-    .section-title {
-      font-size: 1.5em; font-weight: 700; margin: 30px 0 15px 0;
-      background: linear-gradient(45deg, #667eea, #764ba2);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text; color: transparent;
-    }
-    
-    .stats-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 15px; margin: 20px 0;
-    }
-    
-    .stat-card {
-      background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px;
-      text-align: center; backdrop-filter: blur(5px);
-    }
-    
-    .stat-number { font-size: 2em; font-weight: bold; color: #63b3ed; }
-    .stat-label { color: #a0aec0; font-size: 0.9em; }
-    
-    .online-indicator {
-      display: inline-block; width: 8px; height: 8px;
-      background: #48bb78; border-radius: 50%; margin-right: 8px;
-      animation: blink 2s infinite;
-    }
-    
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-    
-    .now-playing {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white; padding: 20px; border-radius: 15px; margin: 20px 0;
-      text-align: center; box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-    }
-    
-    .track-info { font-size: 1.2em; font-weight: 600; margin-bottom: 10px; }
-    .track-artist { opacity: 0.9; }
-    
-    .search-results {
-      background: white; border-radius: 12px; 
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-      max-height: 300px; overflow-y: auto;
-      border: 2px solid #e2e8f0;
-    }
-    
-    .search-item {
-      padding: 15px; border-bottom: 1px solid #f1f5f9;
-      cursor: pointer; transition: all 0.3s ease;
-      display: flex; align-items: center; gap: 15px;
-    }
-    
-    .search-item:hover {
-      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-      transform: translateX(5px);
-    }
-    
-    .search-item:last-child { border-bottom: none; }
-    
-    .search-thumbnail {
-      width: 60px; height: 45px; background: #e2e8f0;
-      border-radius: 8px; display: flex; align-items: center;
-      justify-content: center; color: #64748b; font-size: 1.2em;
-    }
-    
-    .search-info {
-      flex: 1;
-    }
-    
-    .search-title {
-      font-weight: 600; color: #1e293b; margin-bottom: 4px;
-    }
-    
-    .search-artist {
-      color: #64748b; font-size: 0.9em;
-    }
-    
-    .search-duration {
-      color: #94a3b8; font-size: 0.8em;
-      background: #f1f5f9; padding: 4px 8px; border-radius: 12px;
-    }
-    
-    .search-loading {
-      text-align: center; padding: 30px; color: #64748b;
-      animation: pulse 1.5s infinite;
-    }
-    
-    @media (max-width: 768px) {
-      .player-container { margin: 10px; padding: 20px; }
-      .form-group { flex-direction: column; }
-      .input { margin-bottom: 10px; }
-      .video-container iframe { height: 250px; }
-      .search-item { flex-direction: column; text-align: center; }
-      .search-thumbnail { margin-bottom: 10px; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Music Player</title>
+    <!-- YouTube API -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .player-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            display: none;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .login-form h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+            font-size: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .signup-link {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .signup-link:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .form-group small {
+            font-size: 12px;
+            margin-top: 4px;
+            display: block;
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #10ac84, #1dd1a1);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .search-section {
+            padding: 30px;
+            background: white;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 25px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .video-player {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .player-status {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .video-player iframe {
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            height: 400px;
+        }
+
+        .now-playing {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .now-playing.active {
+            display: block;
+        }
+
+        .now-playing-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .now-playing-info img {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .now-playing-details h4 {
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .now-playing-details p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .playlist {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .playlist h3 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 20px;
+        }
+
+        .playlist-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .playlist-item:hover {
+            transform: translateX(5px);
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .playlist-item.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .playlist-item img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .track-info h4 {
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+
+        .track-info p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .remove-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 12px;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .remove-btn:hover {
+            background: #ee5a24;
+            transform: scale(1.1);
+        }
+
+        .playlist-item.active .remove-btn {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .playlist-item.active .remove-btn:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .url-input-container {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .url-input-container h4 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .url-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 14px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .url-input:valid {
+            border-color: #10ac84;
+        }
+
+        .debug-info {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            color: #666;
+            border-left: 4px solid #667eea;
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, #10ac84, #1dd1a1);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .search-results {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .search-results h4 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .search-result-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .search-result-item:hover {
+            transform: translateX(5px);
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-result-item img {
+            width: 80px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .search-result-info {
+            flex: 1;
+        }
+
+        .search-result-info h5 {
+            margin-bottom: 5px;
+            color: #333;
+            font-size: 14px;
+            line-height: 1.3;
+        }
+
+        .search-result-info p {
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 2px;
+        }
+
+        .add-to-playlist-btn {
+            background: linear-gradient(135deg, #10ac84, #1dd1a1);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .add-to-playlist-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(16, 172, 132, 0.3);
+        }
+
+        .loading-spinner {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .api-info {
+            background: linear-gradient(135deg, #ffa502, #ff6348);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .api-info a {
+            color: white;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .search-container {
+                flex-direction: column;
+            }
+            
+            .video-player iframe {
+                width: 100%;
+                height: 250px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="player-container" id="playerContainer">
-    <div class="logo">🎵 StreamVibe</div>
-
-    <!-- Login Section -->
-    <div id="loginSection" class="auth-section">
-      <h3 style="margin-top:0;">Welcome Back!</h3>
-      <div class="form-group">
-        <input id="loginUsername" class="input" placeholder="Username">
-        <input id="loginPassword" class="input" type="password" placeholder="Password">
-        <button id="loginBtn" class="btn">Login</button>
-        <button id="showSignupBtn" class="link-btn">Create Account</button>
-      </div>
-      <div id="loginError" class="error-msg" style="margin-top:10px;"></div>
-    </div>
-
-    <!-- Signup Section -->
-    <div id="signupSection" class="auth-section" style="display:none;">
-      <h3 style="margin-top:0;">Join StreamVibe!</h3>
-      <div class="form-group">
-        <input id="signupUsername" class="input" placeholder="Choose Username">
-        <input id="signupPassword" class="input" type="password" placeholder="Create Password">
-        <input id="signupEmail" class="input" placeholder="Email (optional)">
-        <button id="signupBtn" class="btn">Sign Up</button>
-        <button id="showLoginBtn" class="link-btn">Back to Login</button>
-      </div>
-      <div id="signupError" class="error-msg" style="margin-top:10px;"></div>
-      <div id="signupSuccess" class="success-msg" style="margin-top:10px;"></div>
-    </div>
-
-    <!-- User Section -->
-    <div id="userSection" class="user-section" style="display:none;">
-      <div>
-        <span class="online-indicator"></span>
-        <span id="welcomeMsg" class="welcome-msg"></span>
-      </div>
-      <button id="logoutBtn" class="btn btn-sm">Logout</button>
-    </div>
-
-    <!-- Broadcast Message -->
-    <div id="broadcastMsg" class="broadcast-msg" style="display:none;"></div>
-
-    <!-- Now Playing Section -->
-    <div class="now-playing" id="nowPlayingSection" style="display:none;">
-      <div class="track-info" id="trackInfo">No track selected</div>
-      <div class="track-artist" id="trackArtist">Select a song to start playing</div>
-    </div>
-
-    <!-- Video Player -->
-    <div class="video-container">
-      <iframe id="videoPlayer" src="" allowfullscreen></iframe>
-    </div>
-
-    <!-- Playlist Section -->
-    <div>
-      <h3 class="section-title">🎵 Playlist</h3>
-      <div id="playlistContainer" class="playlist-container"></div>
-    </div>
-
-    <!-- Song Request Section (Regular Users) -->
-    <div id="requestSongSection" class="song-section" style="display:none;">
-      <h4>🎤 Request a Song</h4>
-      
-      <!-- Search Function -->
-      <div style="margin-bottom: 20px;">
-        <div class="form-group">
-          <input id="searchInput" class="input" placeholder="Search for songs, artists, or albums...">
-          <button id="searchBtn" class="btn">🔍 Search</button>
+    <div class="container">
+        <!-- Login Form -->
+        <div id="loginContainer" class="login-container">
+            <form class="login-form" id="loginForm">
+                <h2>🎵 Music Player Login</h2>
+                <div class="form-group">
+                    <label for="loginUsername">Username</label>
+                    <input type="text" id="loginUsername" name="loginUsername" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" name="loginPassword" required>
+                </div>
+                <button type="submit" class="login-btn">Login to Music Player</button>
+                <div style="text-align: center; margin-top: 20px;">
+                    <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
+                        Don't have an account?
+                    </p>
+                    <button type="button" class="signup-link" id="showSignupBtn">Create Account</button>
+                </div>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-top: 20px;">
+                    <p style="text-align: center; margin-bottom: 10px; color: #333; font-weight: 600;">
+                        Demo Accounts Available:
+                    </p>
+                    <div style="font-size: 12px; color: #666; line-height: 1.4;">
+                        <strong>admin</strong> / password<br>
+                        <strong>musiclover</strong> / 123456<br>
+                        <strong>dj_mike</strong> / djmike<br>
+                        <strong>sarah_beats</strong> / sarah123<br>
+                        <strong>rockfan</strong> / rock2024
+                    </div>
+                </div>
+            </form>
         </div>
-        <div id="searchResults" style="margin-top: 15px;"></div>
-      </div>
-      
-      <!-- Manual Request -->
-      <div style="border-top: 2px solid #e2e8f0; padding-top: 20px;">
-        <h5 style="margin-top: 0; color: #666;">Or paste a direct link:</h5>
-        <div class="form-group">
-          <input id="requestSongInput" class="input" placeholder="Paste YouTube link or song title">
-          <button id="requestSongBtn" class="btn">Send Request</button>
+
+        <!-- Signup Form -->
+        <div id="signupContainer" class="login-container" style="display: none;">
+            <form class="login-form" id="signupForm">
+                <h2>🎵 Create Account</h2>
+                <div class="form-group">
+                    <label for="signupUsername">Username</label>
+                    <input type="text" id="signupUsername" name="signupUsername" required minlength="3">
+                    <small style="color: #666;">At least 3 characters</small>
+                </div>
+                <div class="form-group">
+                    <label for="signupEmail">Email</label>
+                    <input type="email" id="signupEmail" name="signupEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">Password</label>
+                    <input type="password" id="signupPassword" name="signupPassword" required minlength="6">
+                    <small style="color: #666;">At least 6 characters</small>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="fullName">Full Name (Optional)</label>
+                    <input type="text" id="fullName" name="fullName">
+                </div>
+                <button type="submit" class="login-btn">Create Account</button>
+                <div style="text-align: center; margin-top: 20px;">
+                    <p style="color: #666; font-size: 14px; margin-bottom: 10px;">
+                        Already have an account?
+                    </p>
+                    <button type="button" class="signup-link" id="showLoginBtn">Back to Login</button>
+                </div>
+            </form>
         </div>
-      </div>
-      
-      <span id="requestStatus" class="success-msg"></span>
-    </div>
 
-    <!-- Add Song Section (Admin Only) -->
-    <div id="addSongSection" class="song-section" style="display:none;">
-      <h4>➕ Add Song to Playlist</h4>
-      <div class="form-group">
-        <input id="youtubeUrl" class="input" placeholder="YouTube URL">
-        <button id="addUrlBtn" class="btn">Add to Playlist</button>
-      </div>
-    </div>
-
-    <!-- Chat Section -->
-    <div class="chat-section">
-      <h4>💬 Chat with Admin</h4>
-      <div id="chatBox" class="chat-box"></div>
-      <div class="form-group">
-        <input id="chatInput" class="input" placeholder="Type your message...">
-        <button id="chatSendBtn" class="btn btn-sm">Send</button>
-      </div>
-    </div>
-
-    <!-- Admin Dashboard -->
-    <div id="adminSection" class="admin-section" style="display:none;">
-      <h3>🛠️ Admin Dashboard</h3>
-      
-      <!-- Stats Overview -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-number" id="totalUsers">0</div>
-          <div class="stat-label">Total Users</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number" id="totalSongs">0</div>
-          <div class="stat-label">Songs in Playlist</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number" id="pendingRequests">0</div>
-          <div class="stat-label">Pending Requests</div>
-        </div>
-      </div>
-
-      <!-- User Management -->
-      <div>
-        <h4>👥 User Management</h4>
-        <ul id="userList" class="admin-list"></ul>
-      </div>
-
-      <!-- Playlist Management -->
-      <div>
-        <h4>🎵 Playlist Management</h4>
-        <div class="form-group" style="margin-bottom:15px;">
-          <button id="shuffleBtn" class="btn btn-sm">🔀 Shuffle Playlist</button>
-          <button id="clearPlaylistBtn" class="btn btn-danger btn-sm">🗑️ Clear All</button>
-        </div>
-        <ul id="adminPlaylist" class="admin-list"></ul>
-      </div>
-
-      <!-- Song Requests -->
-      <div>
-        <h4>🎤 Pending Song Requests</h4>
-        <ul id="adminRequests" class="admin-list"></ul>
-      </div>
-
-      <!-- Chat Management -->
-      <div>
-        <h4>💬 User Chats</h4>
-        <select id="adminChatSelect" class="input" style="margin-bottom:15px;"></select>
-        <div id="adminChatBox" class="chat-box"></div>
-        <div class="form-group">
-          <input id="adminChatInput" class="input" placeholder="Reply to user...">
-          <button id="adminChatSendBtn" class="btn btn-sm">Send</button>
-        </div>
-      </div>
-
-      <!-- Broadcast Message -->
-      <div style="margin-top:25px;">
-        <h4>📢 Broadcast to All Users</h4>
-        <div class="form-group">
-          <input id="broadcastInput" class="input" placeholder="Message for all users">
-          <button id="broadcastBtn" class="btn btn-success btn-sm">Broadcast</button>
-          <button id="clearBroadcastBtn" class="btn btn-danger btn-sm">Clear</button>
-        </div>
-        <span id="broadcastStatus" class="success-msg"></span>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // --- Enhanced Demo Data ---
-    let users = [
-      { username: 'admin', password: 'admin', email: 'admin@streamvibe.com', joinDate: new Date('2024-01-01') },
-      { username: 'alice', password: 'alice', email: 'alice@email.com', joinDate: new Date('2024-06-15') },
-      { username: 'bob', password: 'bob', email: 'bob@email.com', joinDate: new Date('2024-08-20') },
-      { username: 'charlie', password: 'charlie', email: 'charlie@music.com', joinDate: new Date('2024-08-25') }
-    ];
-    
-    let playlist = [
-      { id: 'dQw4w9WgXcQ', title: 'Rick Astley - Never Gonna Give You Up', addedBy: 'admin', addedAt: new Date() },
-      { id: 'kJQP7kiw5Fk', title: 'Luis Fonsi - Despacito ft. Daddy Yankee', addedBy: 'alice', addedAt: new Date() }
-    ];
-    
-    let currentTrack = 0;
-    let currentUser = null;
-    let broadcastMessage = '';
-    let songRequests = [];
-    let chatMessages = {};
-    
-    // Sample music database for search functionality
-    let musicDatabase = [
-      { id: 'dQw4w9WgXcQ', title: 'Never Gonna Give You Up', artist: 'Rick Astley', duration: '3:33', genre: 'Pop' },
-      { id: 'kJQP7kiw5Fk', title: 'Despacito', artist: 'Luis Fonsi ft. Daddy Yankee', duration: '3:47', genre: 'Latin Pop' },
-      { id: '9bZkp7q19f0', title: 'Gangnam Style', artist: 'PSY', duration: '3:39', genre: 'K-Pop' },
-      { id: 'fJ9rUzIMcZQ', title: 'Bohemian Rhapsody', artist: 'Queen', duration: '5:55', genre: 'Rock' },
-      { id: 'hTWKbfoikeg', title: 'Smells Like Teen Spirit', artist: 'Nirvana', duration: '5:01', genre: 'Grunge' },
-      { id: 'SlPhMPnQ58k', title: 'Uptown Funk', artist: 'Mark Ronson ft. Bruno Mars', duration: '4:30', genre: 'Funk' },
-      { id: 'RgKAFK5djSk', title: 'Wrecking Ball', artist: 'Miley Cyrus', duration: '3:41', genre: 'Pop' },
-      { id: 'YQHsXMglC9A', title: 'Hello', artist: 'Adele', duration: '4:55', genre: 'Soul' },
-      { id: 'CevxZvSJLk8', title: 'Roar', artist: 'Katy Perry', duration: '3:43', genre: 'Pop' },
-      { id: 'JGwWNGJdvx8', title: 'Shape of You', artist: 'Ed Sheeran', duration: '3:53', genre: 'Pop' },
-      { id: 'xuCn8ux2gbs', title: 'Thinking Out Loud', artist: 'Ed Sheeran', duration: '4:41', genre: 'Pop' },
-      { id: 'pAgnJDJN4VA', title: 'Someone Like You', artist: 'Adele', duration: '4:45', genre: 'Soul' },
-      { id: 'nfs8NYg7yQM', title: 'Radioactive', artist: 'Imagine Dragons', duration: '3:06', genre: 'Alternative Rock' },
-      { id: 'mbLp5VcaT9E', title: 'Believers', artist: 'Imagine Dragons', duration: '3:24', genre: 'Alternative Rock' },
-      { id: 'T4cdfRohhcg', title: 'Blinding Lights', artist: 'The Weeknd', duration: '3:20', genre: 'Synth-pop' }
-    ];
-
-    // --- DOM Elements ---
-    const loginSection = document.getElementById('loginSection');
-    const signupSection = document.getElementById('signupSection');
-    const userSection = document.getElementById('userSection');
-    const adminSection = document.getElementById('adminSection');
-    const nowPlayingSection = document.getElementById('nowPlayingSection');
-    const broadcastMsg = document.getElementById('broadcastMsg');
-    const playlistContainer = document.getElementById('playlistContainer');
-    const videoPlayer = document.getElementById('videoPlayer');
-    
-    // Auth elements
-    const loginBtn = document.getElementById('loginBtn');
-    const loginUsername = document.getElementById('loginUsername');
-    const loginPassword = document.getElementById('loginPassword');
-    const loginError = document.getElementById('loginError');
-    const signupBtn = document.getElementById('signupBtn');
-    const signupUsername = document.getElementById('signupUsername');
-    const signupPassword = document.getElementById('signupPassword');
-    const signupEmail = document.getElementById('signupEmail');
-    const showSignupBtn = document.getElementById('showSignupBtn');
-    const showLoginBtn = document.getElementById('showLoginBtn');
-    const signupError = document.getElementById('signupError');
-    const signupSuccess = document.getElementById('signupSuccess');
-    const welcomeMsg = document.getElementById('welcomeMsg');
-    const logoutBtn = document.getElementById('logoutBtn');
-
-    // Song management
-    const addUrlBtn = document.getElementById('addUrlBtn');
-    const youtubeUrl = document.getElementById('youtubeUrl');
-    const addSongSection = document.getElementById('addSongSection');
-    const requestSongSection = document.getElementById('requestSongSection');
-    const requestSongInput = document.getElementById('requestSongInput');
-    const requestSongBtn = document.getElementById('requestSongBtn');
-    const requestStatus = document.getElementById('requestStatus');
-    
-    // Search elements
-    const searchInput = document.getElementById('searchInput');
-    const searchBtn = document.getElementById('searchBtn');
-    const searchResults = document.getElementById('searchResults');
-
-    // Chat elements
-    const chatBox = document.getElementById('chatBox');
-    const chatInput = document.getElementById('chatInput');
-    const chatSendBtn = document.getElementById('chatSendBtn');
-
-    // Admin elements
-    const userList = document.getElementById('userList');
-    const adminPlaylist = document.getElementById('adminPlaylist');
-    const adminRequests = document.getElementById('adminRequests');
-    const adminChatSelect = document.getElementById('adminChatSelect');
-    const adminChatBox = document.getElementById('adminChatBox');
-    const adminChatInput = document.getElementById('adminChatInput');
-    const adminChatSendBtn = document.getElementById('adminChatSendBtn');
-    const broadcastInput = document.getElementById('broadcastInput');
-    const broadcastBtn = document.getElementById('broadcastBtn');
-    const clearBroadcastBtn = document.getElementById('clearBroadcastBtn');
-    const broadcastStatus = document.getElementById('broadcastStatus');
-    const shuffleBtn = document.getElementById('shuffleBtn');
-    const clearPlaylistBtn = document.getElementById('clearPlaylistBtn');
-
-    // Stats elements
-    const totalUsers = document.getElementById('totalUsers');
-    const totalSongs = document.getElementById('totalSongs');
-    const pendingRequests = document.getElementById('pendingRequests');
-    const trackInfo = document.getElementById('trackInfo');
-    const trackArtist = document.getElementById('trackArtist');
-
-    // --- Utility Functions ---
-    function showStatus(element, message, isError = false) {
-      element.textContent = message;
-      element.className = isError ? 'error-msg' : 'success-msg';
-      setTimeout(() => element.textContent = '', 3000);
-    }
-
-    function formatTime(date) {
-      return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    }
-
-    function extractYouTubeTitle(url) {
-      // In a real app, you'd fetch the title via YouTube API
-      // For demo, we'll extract from common patterns or use generic title
-      return 'YouTube Video';
-    }
-
-    function getYouTubeId(url) {
-      const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|v\/))([\w-]{11})/);
-      return match ? match[1] : null;
-    }
-
-    // --- Authentication ---
-    showSignupBtn.onclick = () => {
-      loginSection.style.display = 'none';
-      signupSection.style.display = '';
-      clearErrors();
-    };
-
-    showLoginBtn.onclick = () => {
-      loginSection.style.display = '';
-      signupSection.style.display = 'none';
-      clearErrors();
-    };
-
-    function clearErrors() {
-      loginError.textContent = '';
-      signupError.textContent = '';
-      signupSuccess.textContent = '';
-    }
-
-    signupBtn.onclick = () => {
-      const username = signupUsername.value.trim();
-      const password = signupPassword.value.trim();
-      const email = signupEmail.value.trim();
-      
-      if (!username || !password) {
-        showStatus(signupError, 'Username and password are required.', true);
-        return;
-      }
-      
-      if (username.length < 3) {
-        showStatus(signupError, 'Username must be at least 3 characters.', true);
-        return;
-      }
-      
-      if (users.find(u => u.username === username)) {
-        showStatus(signupError, 'Username already exists.', true);
-        return;
-      }
-      
-      users.push({ 
-        username, 
-        password, 
-        email, 
-        joinDate: new Date() 
-      });
-      
-      showStatus(signupSuccess, 'Account created successfully! You can now login.');
-      signupUsername.value = '';
-      signupPassword.value = '';
-      signupEmail.value = '';
-      
-      setTimeout(() => {
-        loginSection.style.display = '';
-        signupSection.style.display = 'none';
-      }, 2000);
-    };
-
-    loginBtn.onclick = () => {
-      const username = loginUsername.value.trim();
-      const password = loginPassword.value.trim();
-      
-      const user = users.find(u => u.username === username && u.password === password);
-      if (!user) {
-        showStatus(loginError, 'Invalid username or password.', true);
-        return;
-      }
-      
-      currentUser = user;
-      // Note: Using in-memory storage instead of localStorage for demo
-      loginSection.style.display = 'none';
-      signupSection.style.display = 'none';
-      userSection.style.display = '';
-      welcomeMsg.textContent = `Welcome back, ${currentUser.username}!`;
-      showUserInterface();
-    };
-
-    logoutBtn.onclick = () => {
-      currentUser = null;
-      loginSection.style.display = '';
-      userSection.style.display = 'none';
-      adminSection.style.display = 'none';
-      addSongSection.style.display = 'none';
-      requestSongSection.style.display = 'none';
-      broadcastMsg.style.display = 'none';
-      nowPlayingSection.style.display = 'none';
-      renderPlaylist();
-      chatBox.innerHTML = '';
-      clearErrors();
-    };
-
-    function showUserInterface() {
-      if (!currentUser) return;
-      
-      if (currentUser.username === 'admin') {
-        addSongSection.style.display = '';
-        requestSongSection.style.display = 'none';
-        adminSection.style.display = 'block';
-        updateAdminStats();
-        renderUserList();
-        renderAdminPlaylist();
-        renderRequests();
-        renderAdminChatSelect();
-        renderAdminChat();
-      } else {
-        addSongSection.style.display = 'none';
-        requestSongSection.style.display = '';
-        adminSection.style.display = 'none';
-        renderChat();
-      }
-      
-      renderPlaylist();
-      showBroadcastMessage();
-      updateNowPlaying();
-    }
-
-    function showBroadcastMessage() {
-      if (broadcastMessage && currentUser) {
-        broadcastMsg.style.display = 'block';
-        broadcastMsg.textContent = `📢 Admin: ${broadcastMessage}`;
-      } else {
-        broadcastMsg.style.display = 'none';
-      }
-    }
-
-    function updateNowPlaying() {
-      if (playlist.length > 0 && currentTrack < playlist.length) {
-        nowPlayingSection.style.display = '';
-        trackInfo.textContent = playlist[currentTrack].title;
-        trackArtist.textContent = `Added by ${playlist[currentTrack].addedBy}`;
-      } else {
-        nowPlayingSection.style.display = 'none';
-      }
-    }
-
-    // --- Playlist Management ---
-    addUrlBtn.onclick = () => {
-      const url = youtubeUrl.value.trim();
-      if (!url) return;
-      
-      const id = getYouTubeId(url);
-      if (!id) {
-        alert('Please enter a valid YouTube URL');
-        return;
-      }
-      
-      const title = extractYouTubeTitle(url);
-      playlist.push({
-        id, 
-        title, 
-        addedBy: currentUser.username,
-        addedAt: new Date()
-      });
-      
-      youtubeUrl.value = '';
-      renderPlaylist();
-      renderAdminPlaylist();
-      updateAdminStats();
-      updateNowPlaying();
-      
-      // Auto-play if this is the first song
-      if (playlist.length === 1) {
-        playTrack(0);
-      }
-    };
-
-    function renderPlaylist() {
-      playlistContainer.innerHTML = '';
-      
-      if (playlist.length === 0) {
-        playlistContainer.innerHTML = '<div style="text-align:center; color:#666; padding:20px;">No songs in playlist yet</div>';
-        return;
-      }
-      
-      playlist.forEach((track, i) => {
-        const div = document.createElement('div');
-        div.className = 'playlist-item' + (i === currentTrack ? ' active' : '');
-        div.innerHTML = `
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <div style="font-weight:600;">${track.title}</div>
-              <div style="font-size:0.9em; opacity:0.7;">Added by ${track.addedBy}</div>
+        <!-- Music Player -->
+        <div id="playerContainer" class="player-container">
+            <div class="header">
+                <div class="logo">
+                    🎵 YouTube Music Player
+                </div>
+                <button class="logout-btn" id="logoutBtn">Logout</button>
             </div>
-            <div style="font-size:0.8em; opacity:0.6;">
-              ${track.addedAt ? formatTime(track.addedAt) : ''}
+
+            <div class="search-section">
+                <div class="api-info">
+                    <strong>🔑 YouTube Music Player</strong><br>
+                    Ready to play with 8+ sample tracks loaded! Add your own YouTube videos or try the demo accounts.<br>
+                    Search feature requires YouTube Data API key for full functionality.
+                </div>
+                <div class="search-container">
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search YouTube for music videos..." />
+                    <button class="search-btn" id="searchBtn">🔍 Search YouTube</button>
+                </div>
+
+                <div id="searchResults" class="search-results" style="display: none;">
+                    <h4>Search Results:</h4>
+                    <div id="searchResultsContainer"></div>
+                </div>
+
+                <div class="url-input-container">
+                    <h4>Add YouTube Video to Playlist:</h4>
+                    <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                        Paste any YouTube URL (e.g., https://www.youtube.com/watch?v=dQw4w9WgXcQ)
+                    </p>
+                    <input type="text" class="url-input" id="urlInput" 
+                           placeholder="Paste YouTube URL here..." 
+                           value="" />
+                    <button class="add-btn" id="addUrlBtn">+ Add to Playlist</button>
+                    <div style="margin-top: 10px;">
+                        <small style="color: #999;">
+                            <strong>Try these working examples:</strong><br>
+                            • https://www.youtube.com/watch?v=jNQXAC9IVRw<br>
+                            • https://youtu.be/jNQXAC9IVRw<br>
+                            • jNQXAC9IVRw (just the video ID)<br><br>
+                            <strong>Note:</strong> Some videos may be restricted from embedding.
+                        </small>
+                    </div>
+                </div>
+
+                <div class="video-player">
+                    <div id="playerStatus" class="player-status">Ready to play music! 🎵</div>
+                    <div id="nowPlaying" class="now-playing">
+                        <div class="now-playing-info">
+                            <img id="nowPlayingImage" src="" alt="Now Playing">
+                            <div class="now-playing-details">
+                                <h4 id="nowPlayingTitle">No track selected</h4>
+                                <p id="nowPlayingArtist">Select a song to play</p>
+                            </div>
+                        </div>
+                    </div>
+                    <iframe id="videoPlayer" width="600" height="400" frameborder="0" allowfullscreen 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            src=""></iframe>
+                </div>
+
+                <div class="controls">
+                    <button class="control-btn" id="prevBtn">⏮ Previous</button>
+                    <button class="control-btn" id="playPauseBtn">⏸ Pause</button>
+                    <button class="control-btn" id="nextBtn">Next ⏭</button>
+                </div>
+
+                <div class="playlist">
+                    <h3>🎵 Your Playlist</h3>
+                    <div id="playlistContainer">
+                        <!-- Playlist items will be added here -->
+                    </div>
+                </div>
             </div>
-          </div>
-        `;
-        
-        // Only admin can control playback
-        if (currentUser && currentUser.username === 'admin') {
-          div.onclick = () => playTrack(i);
-          div.style.cursor = 'pointer';
-        } else {
-          div.style.cursor = 'default';
-        }
-        
-        playlistContainer.appendChild(div);
-      });
-    }
+        </div>
+    </div>
 
-    function playTrack(idx) {
-      if (!playlist[idx] || !currentUser || currentUser.username !== 'admin') return;
-      currentTrack = idx;
-      videoPlayer.src = `https://www.youtube.com/embed/${playlist[idx].id}?autoplay=1`;
-      renderPlaylist();
-      updateNowPlaying();
-    }
-
-    // --- Song Search Functionality ---
-    searchBtn.onclick = performSearch;
-    searchInput.onkeypress = (e) => {
-      if (e.key === 'Enter') performSearch();
-    };
-
-    function performSearch() {
-      const query = searchInput.value.trim().toLowerCase();
-      if (!query) {
-        searchResults.innerHTML = '';
-        return;
-      }
-      
-      // Show loading state
-      searchResults.innerHTML = '<div class="search-results"><div class="search-loading">🔍 Searching for songs...</div></div>';
-      
-      // Simulate search delay for realism
-      setTimeout(() => {
-        const results = musicDatabase.filter(song => 
-          song.title.toLowerCase().includes(query) ||
-          song.artist.toLowerCase().includes(query) ||
-          song.genre.toLowerCase().includes(query)
-        );
-        
-        displaySearchResults(results, query);
-      }, 800);
-    }
-
-    function displaySearchResults(results, query) {
-      if (results.length === 0) {
-        searchResults.innerHTML = `
-          <div class="search-results">
-            <div class="search-empty">
-              No songs found for "${query}"<br>
-              <small>Try searching for artist name, song title, or genre</small>
-            </div>
-          </div>
-        `;
-        return;
-      }
-      
-      let html = '<div class="search-results">';
-      results.forEach(song => {
-        html += `
-          <div class="search-item" onclick="requestFromSearch('${song.id}', '${song.title}', '${song.artist}')">
-            <div class="search-thumbnail">🎵</div>
-            <div class="search-info">
-              <div class="search-title">${song.title}</div>
-              <div class="search-artist">${song.artist} • ${song.genre}</div>
-            </div>
-            <div class="search-duration">${song.duration}</div>
-          </div>
-        `;
-      });
-      html += '</div>';
-      
-      searchResults.innerHTML = html;
-    }
-
-    function requestFromSearch(id, title, artist) {
-      if (!currentUser) return;
-      
-      const fullTitle = `${title} - ${artist}`;
-      const youtubeUrl = `https://www.youtube.com/watch?v=${id}`;
-      
-      songRequests.push({
-        user: currentUser.username,
-        request: youtubeUrl,
-        title: fullTitle,
-        timestamp: new Date()
-      });
-      
-      showStatus(requestStatus, `"${title}" requested successfully!`);
-      
-      // Clear search
-      searchInput.value = '';
-      searchResults.innerHTML = '';
-      
-      // Update admin view
-      renderRequests();
-      updateAdminStats();
-    }
-
-    // --- Song Requests ---
-    requestSongBtn.onclick = () => {
-      const request = requestSongInput.value.trim();
-      if (!request || !currentUser) return;
-      
-      songRequests.push({
-        user: currentUser.username,
-        request: request,
-        timestamp: new Date()
-      });
-      
-      showStatus(requestStatus, 'Request sent successfully!');
-      requestSongInput.value = '';
-      renderRequests();
-      updateAdminStats();
-    };
-
-    function renderRequests() {
-      if (!adminRequests) return;
-      adminRequests.innerHTML = '';
-      
-      if (songRequests.length === 0) {
-        adminRequests.innerHTML = '<li style="opacity:0.6;">No pending requests</li>';
-        return;
-      }
-      
-      songRequests.forEach((sr, idx) => {
-        const li = document.createElement('li');
-        const displayTitle = sr.title || sr.request;
-        const isYouTubeLink = getYouTubeId(sr.request);
-        
-        li.innerHTML = `
-          <div>
-            <strong>${sr.user}</strong>: ${displayTitle}
-            <div style="font-size:0.8em; opacity:0.7;">
-              ${formatTime(sr.timestamp)}
-              ${isYouTubeLink ? '• 🔗 YouTube Link' : '• 📝 Text Request'}
-            </div>
-          </div>
-          <div style="display:flex; gap:8px;">
-            <button class="btn btn-success btn-sm" onclick="approveRequest(${idx})">✓ Add</button>
-            <button class="btn btn-danger btn-sm" onclick="dismissRequest(${idx})">✗ Dismiss</button>
-          </div>
-        `;
-        adminRequests.appendChild(li);
-      });
-    }
-
-    function approveRequest(idx) {
-      const request = songRequests[idx];
-      const id = getYouTubeId(request.request);
-      const title = request.title || (id ? extractYouTubeTitle(request.request) : request.request);
-      
-      playlist.push({
-        id: id || '',
-        title: title,
-        addedBy: request.user,
-        addedAt: new Date()
-      });
-      
-      songRequests.splice(idx, 1);
-      renderRequests();
-      renderAdminPlaylist();
-      renderPlaylist();
-      updateAdminStats();
-      updateNowPlaying();
-      
-      // Auto-play if this is the first song
-      if (playlist.length === 1) {
-        playTrack(0);
-      }
-    }
-
-    function dismissRequest(idx) {
-      songRequests.splice(idx, 1);
-      renderRequests();
-      updateAdminStats();
-    }
-
-    // --- Admin Functions ---
-    function updateAdminStats() {
-      if (totalUsers) totalUsers.textContent = users.filter(u => u.username !== 'admin').length;
-      if (totalSongs) totalSongs.textContent = playlist.length;
-      if (pendingRequests) pendingRequests.textContent = songRequests.length;
-    }
-
-    function renderUserList() {
-      userList.innerHTML = '';
-      users.forEach((user, idx) => {
-        if (user.username === 'admin') return;
-        
-        const li = document.createElement('li');
-        li.innerHTML = `
-          <div>
-            <strong>${user.username}</strong> (${user.email || 'no email'})
-            <div style="font-size:0.8em; opacity:0.7;">Joined: ${user.joinDate ? user.joinDate.toLocaleDateString() : 'Unknown'}</div>
-          </div>
-          <button class="btn btn-danger btn-sm" onclick="deleteUser(${idx})">Delete</button>
-        `;
-        userList.appendChild(li);
-      });
-    }
-
-    function deleteUser(idx) {
-      const user = users[idx];
-      if (confirm(`Delete user "${user.username}"?`)) {
-        users.splice(idx, 1);
-        renderUserList();
-        updateAdminStats();
-        renderAdminChatSelect();
-      }
-    }
-
-    function renderAdminPlaylist() {
-      adminPlaylist.innerHTML = '';
-      
-      if (playlist.length === 0) {
-        adminPlaylist.innerHTML = '<li style="opacity:0.6;">No songs in playlist</li>';
-        return;
-      }
-      
-      playlist.forEach((track, i) => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-          <div>
-            <strong>${track.title}</strong>
-            <div style="font-size:0.8em; opacity:0.7;">Added by ${track.addedBy} • ${track.addedAt ? formatTime(track.addedAt) : ''}</div>
-          </div>
-          <div style="display:flex; gap:8px;">
-            <button class="btn btn-sm" onclick="playTrack(${i})">▶ Play</button>
-            <button class="btn btn-danger btn-sm" onclick="removeFromPlaylist(${i})">Remove</button>
-          </div>
-        `;
-        adminPlaylist.appendChild(li);
-      });
-    }
-
-    function removeFromPlaylist(idx) {
-      playlist.splice(idx, 1);
-      if (currentTrack >= playlist.length) {
-        currentTrack = 0;
-      }
-      renderAdminPlaylist();
-      renderPlaylist();
-      updateAdminStats();
-      updateNowPlaying();
-      
-      if (playlist.length === 0) {
-        videoPlayer.src = '';
-      } else if (idx <= currentTrack) {
-        playTrack(currentTrack);
-      }
-    }
-
-    // --- New Admin Features ---
-    shuffleBtn.onclick = () => {
-      if (playlist.length === 0) return;
-      
-      // Simple shuffle algorithm
-      for (let i = playlist.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [playlist[i], playlist[j]] = [playlist[j], playlist[i]];
-      }
-      
-      currentTrack = 0;
-      renderPlaylist();
-      renderAdminPlaylist();
-      if (playlist.length > 0) {
-        playTrack(0);
-      }
-    };
-
-    clearPlaylistBtn.onclick = () => {
-      if (confirm('Clear entire playlist? This cannot be undone.')) {
-        playlist = [];
-        currentTrack = 0;
-        videoPlayer.src = '';
-        renderPlaylist();
-        renderAdminPlaylist();
-        updateAdminStats();
-        updateNowPlaying();
-      }
-    };
-
-    // --- Broadcast Management ---
-    broadcastBtn.onclick = () => {
-      broadcastMessage = broadcastInput.value.trim();
-      showBroadcastMessage();
-      showStatus(broadcastStatus, 'Broadcast sent to all users!');
-      broadcastInput.value = '';
-    };
-
-    clearBroadcastBtn.onclick = () => {
-      broadcastMessage = '';
-      broadcastMsg.style.display = 'none';
-      showStatus(broadcastStatus, 'Broadcast message cleared.');
-    };
-
-    // --- Chat System ---
-    function renderChat() {
-      if (!currentUser) return;
-      chatBox.innerHTML = '';
-      const msgs = chatMessages[currentUser.username] || [];
-      
-      if (msgs.length === 0) {
-        chatBox.innerHTML = '<div style="text-align:center; opacity:0.6; padding:20px;">No messages yet. Start a conversation!</div>';
-        return;
-      }
-      
-      msgs.forEach(msg => {
-        const div = document.createElement('div');
-        div.className = 'chat-msg';
-        const time = msg.timestamp ? formatTime(msg.timestamp) : '';
-        
-        if (msg.sender === 'admin') {
-          div.innerHTML = `<span class="chat-user chat-admin">Admin:</span> ${msg.text} <span class="chat-timestamp">${time}</span>`;
-        } else {
-          div.innerHTML = `<span class="chat-user">${msg.sender}:</span> ${msg.text} <span class="chat-timestamp">${time}</span>`;
-        }
-        chatBox.appendChild(div);
-      });
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    chatSendBtn.onclick = sendChatMessage;
-    chatInput.onkeypress = (e) => {
-      if (e.key === 'Enter') sendChatMessage();
-    };
-
-    function sendChatMessage() {
-      if (!currentUser) return;
-      const text = chatInput.value.trim();
-      if (!text) return;
-      
-      if (!chatMessages[currentUser.username]) {
-        chatMessages[currentUser.username] = [];
-      }
-      
-      chatMessages[currentUser.username].push({
-        sender: currentUser.username,
-        text: text,
-        timestamp: new Date()
-      });
-      
-      chatInput.value = '';
-      renderChat();
-      renderAdminChat();
-      renderAdminChatSelect(); // Update chat select to show activity
-    }
-
-    // --- Admin Chat Management ---
-    function renderAdminChatSelect() {
-      adminChatSelect.innerHTML = '<option value="">Select a user to chat with</option>';
-      users.forEach(u => {
-        if (u.username === 'admin') return;
-        const option = document.createElement('option');
-        option.value = u.username;
-        const msgCount = chatMessages[u.username] ? chatMessages[u.username].length : 0;
-        const hasNewMsgs = msgCount > 0 ? ' 💬' : '';
-        option.textContent = `${u.username}${hasNewMsgs} (${msgCount} messages)`;
-        adminChatSelect.appendChild(option);
-      });
-    }
-
-    adminChatSelect.onchange = renderAdminChat;
-
-    function renderAdminChat() {
-      const username = adminChatSelect.value;
-      adminChatBox.innerHTML = '';
-      
-      if (!username) {
-        adminChatBox.innerHTML = '<div style="text-align:center; opacity:0.6; padding:20px;">Select a user to view chat history</div>';
-        return;
-      }
-      
-      const msgs = chatMessages[username] || [];
-      if (msgs.length === 0) {
-        adminChatBox.innerHTML = '<div style="text-align:center; opacity:0.6; padding:20px;">No conversation with this user yet</div>';
-        return;
-      }
-      
-      msgs.forEach(msg => {
-        const div = document.createElement('div');
-        div.className = 'chat-msg';
-        const time = msg.timestamp ? formatTime(msg.timestamp) : '';
-        
-        if (msg.sender === 'admin') {
-          div.innerHTML = `<span class="chat-user chat-admin">Admin:</span> ${msg.text} <span class="chat-timestamp">${time}</span>`;
-        } else {
-          div.innerHTML = `<span class="chat-user">${msg.sender}:</span> ${msg.text} <span class="chat-timestamp">${time}</span>`;
-        }
-        adminChatBox.appendChild(div);
-      });
-      adminChatBox.scrollTop = adminChatBox.scrollHeight;
-    }
-
-    adminChatSendBtn.onclick = sendAdminMessage;
-    adminChatInput.onkeypress = (e) => {
-      if (e.key === 'Enter') sendAdminMessage();
-    };
-
-    function sendAdminMessage() {
-      const username = adminChatSelect.value;
-      if (!username) return;
-      
-      const text = adminChatInput.value.trim();
-      if (!text) return;
-      
-      if (!chatMessages[username]) {
-        chatMessages[username] = [];
-      }
-      
-      chatMessages[username].push({
-        sender: 'admin',
-        text: text,
-        timestamp: new Date()
-      });
-      
-      adminChatInput.value = '';
-      renderAdminChat();
-      
-      // If this user is currently logged in, update their chat view
-      if (currentUser && currentUser.username === username) {
-        renderChat();
-      }
-    }
-
-    // --- Auto-start and Initial Setup ---
-    function initialize() {
-      // Auto-play first track if admin and playlist exists
-      if (playlist.length > 0) {
-        updateNowPlaying();
-      }
-      
-      // Initialize stats
-      updateAdminStats();
-      
-      // Add some sample chat messages for demo
-      chatMessages['alice'] = [
-        { sender: 'alice', text: 'Hey! Love the new playlist feature!', timestamp: new Date(Date.now() - 3600000) },
-        { sender: 'admin', text: 'Thanks Alice! Let me know if you have any requests.', timestamp: new Date(Date.now() - 3500000) }
-      ];
-      
-      chatMessages['bob'] = [
-        { sender: 'bob', text: 'Can you add some jazz music?', timestamp: new Date(Date.now() - 1800000) }
-      ];
-      
-      // Add some sample requests
-      songRequests.push({
-        user: 'alice',
-        request: 'https://www.youtube.com/watch?v=9bZkp7q19f0',
-        timestamp: new Date(Date.now() - 900000)
-      });
-      
-      songRequests.push({
-        user: 'bob',
-        request: 'Some good jazz music please',
-        timestamp: new Date(Date.now() - 600000)
-      });
-    }
-
-    // --- Enhanced Error Handling ---
-    window.onerror = function(msg, url, line, col, error) {
-      console.error('Application error:', msg, 'at line', line);
-      return false;
-    };
-
-    // --- Keyboard Shortcuts ---
-    document.addEventListener('keydown', (e) => {
-      if (!currentUser || currentUser.username !== 'admin') return;
-      
-      if (e.ctrlKey || e.metaKey) {
-        switch(e.key) {
-          case 'ArrowRight':
-            e.preventDefault();
-            if (currentTrack < playlist.length - 1) {
-              playTrack(currentTrack + 1);
+    <script>
+        class MusicPlayer {
+            constructor() {
+                this.playlist = [];
+                this.currentTrack = 0;
+                this.isLoggedIn = false;
+                this.users = this.loadUsers();
+                this.currentUser = null;
+                this.youtubeApiKey = null; // Set this to your YouTube API key
+                this.isYouTubeAPIReady = false;
+                this.initializeElements();
+                this.bindEvents();
+                this.loadSamplePlaylist();
+                this.initializeYouTubeAPI();
             }
-            break;
-          case 'ArrowLeft':
-            e.preventDefault();
-            if (currentTrack > 0) {
-              playTrack(currentTrack - 1);
+
+            loadUsers() {
+                // Default users for demo with more variety
+                return [
+                    { username: 'admin', password: 'password', email: 'admin@example.com', fullName: 'Admin User', createdAt: '2024-01-01' },
+                    { username: 'musiclover', password: '123456', email: 'music@example.com', fullName: 'Music Lover', createdAt: '2024-02-15' },
+                    { username: 'dj_mike', password: 'djmike', email: 'mike@example.com', fullName: 'DJ Mike', createdAt: '2024-03-10' },
+                    { username: 'sarah_beats', password: 'sarah123', email: 'sarah@example.com', fullName: 'Sarah Johnson', createdAt: '2024-04-05' },
+                    { username: 'rockfan', password: 'rock2024', email: 'rock@example.com', fullName: 'Rock Fan', createdAt: '2024-05-20' }
+                ];
             }
-            break;
+
+            initializeYouTubeAPI() {
+                // Initialize YouTube API (demo mode without API key)
+                if (typeof gapi !== 'undefined') {
+                    gapi.load('client', () => {
+                        // In production, you would initialize with your API key:
+                        // gapi.client.init({
+                        //     apiKey: this.youtubeApiKey,
+                        //     discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest']
+                        // }).then(() => {
+                        //     this.isYouTubeAPIReady = true;
+                        // });
+                        
+                        // For demo, we'll simulate API readiness
+                        setTimeout(() => {
+                            this.isYouTubeAPIReady = true;
+                            console.log('YouTube API simulation ready');
+                        }, 1000);
+                    });
+                }
+            }
+
+            initializeElements() {
+                this.loginContainer = document.getElementById('loginContainer');
+                this.signupContainer = document.getElementById('signupContainer');
+                this.playerContainer = document.getElementById('playerContainer');
+                this.loginForm = document.getElementById('loginForm');
+                this.signupForm = document.getElementById('signupForm');
+                this.showSignupBtn = document.getElementById('showSignupBtn');
+                this.showLoginBtn = document.getElementById('showLoginBtn');
+                this.logoutBtn = document.getElementById('logoutBtn');
+                this.searchInput = document.getElementById('searchInput');
+                this.searchBtn = document.getElementById('searchBtn');
+                this.searchResults = document.getElementById('searchResults');
+                this.searchResultsContainer = document.getElementById('searchResultsContainer');
+                this.urlInput = document.getElementById('urlInput');
+                this.addUrlBtn = document.getElementById('addUrlBtn');
+                this.videoPlayer = document.getElementById('videoPlayer');
+                this.playerStatus = document.getElementById('playerStatus');
+                this.nowPlaying = document.getElementById('nowPlaying');
+                this.nowPlayingImage = document.getElementById('nowPlayingImage');
+                this.nowPlayingTitle = document.getElementById('nowPlayingTitle');
+                this.nowPlayingArtist = document.getElementById('nowPlayingArtist');
+                this.playlistContainer = document.getElementById('playlistContainer');
+                this.prevBtn = document.getElementById('prevBtn');
+                this.playPauseBtn = document.getElementById('playPauseBtn');
+                this.nextBtn = document.getElementById('nextBtn');
+            }
+
+            bindEvents() {
+                // Form events
+                this.loginForm.addEventListener('submit', (e) => this.handleLogin(e));
+                this.signupForm.addEventListener('submit', (e) => this.handleSignup(e));
+                this.showSignupBtn.addEventListener('click', () => this.showSignup());
+                this.showLoginBtn.addEventListener('click', () => this.showLogin());
+                this.logoutBtn.addEventListener('click', () => this.handleLogout());
+                
+                // Player events
+                this.searchBtn.addEventListener('click', () => this.handleSearch());
+                this.addUrlBtn.addEventListener('click', () => {
+                    console.log('Add URL button clicked');
+                    this.handleAddUrl();
+                });
+                this.prevBtn.addEventListener('click', () => this.previousTrack());
+                this.nextBtn.addEventListener('click', () => this.nextTrack());
+                this.playPauseBtn.addEventListener('click', () => this.togglePlayPause());
+                
+                // Input events
+                this.searchInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        this.handleSearch();
+                    }
+                });
+                
+                this.urlInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        console.log('Enter pressed in URL input');
+                        this.handleAddUrl();
+                    }
+                });
+
+                // Debug: Log when input changes
+                this.urlInput.addEventListener('input', (e) => {
+                    console.log('URL input changed:', e.target.value);
+                });
+            }
+
+            handleSearch() {
+                const query = this.searchInput.value.trim();
+                if (query) {
+                    // In a real app, you'd use YouTube API here
+                    alert(`Search functionality would query YouTube API for: "${query}"\n\nFor demo purposes, try adding a YouTube URL directly!`);
+                }
+            }
+
+            showSignup() {
+                this.loginContainer.style.display = 'none';
+                this.signupContainer.style.display = 'block';
+                this.clearMessages();
+            }
+
+            showLogin() {
+                this.signupContainer.style.display = 'none';
+                this.loginContainer.style.display = 'block';
+                this.clearMessages();
+            }
+
+            clearMessages() {
+                const messages = document.querySelectorAll('.success-message, .error-message');
+                messages.forEach(msg => msg.remove());
+            }
+
+            showMessage(message, type = 'success') {
+                this.clearMessages();
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `${type}-message`;
+                messageDiv.textContent = message;
+                
+                const activeForm = this.loginContainer.style.display !== 'none' 
+                    ? this.loginContainer.querySelector('.login-form')
+                    : this.signupContainer.querySelector('.login-form');
+                
+                activeForm.insertBefore(messageDiv, activeForm.firstChild);
+                
+                setTimeout(() => messageDiv.remove(), 5000);
+            }
+
+            handleSignup(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('signupUsername').value.trim();
+                const email = document.getElementById('signupEmail').value.trim();
+                const password = document.getElementById('signupPassword').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                const fullName = document.getElementById('fullName').value.trim();
+
+                // Validation
+                if (password !== confirmPassword) {
+                    this.showMessage('Passwords do not match!', 'error');
+                    return;
+                }
+
+                if (password.length < 6) {
+                    this.showMessage('Password must be at least 6 characters long!', 'error');
+                    return;
+                }
+
+                if (username.length < 3) {
+                    this.showMessage('Username must be at least 3 characters long!', 'error');
+                    return;
+                }
+
+                // Check if username already exists
+                if (this.users.find(user => user.username.toLowerCase() === username.toLowerCase())) {
+                    this.showMessage('Username already exists! Please choose another.', 'error');
+                    return;
+                }
+
+                // Check if email already exists
+                if (this.users.find(user => user.email.toLowerCase() === email.toLowerCase())) {
+                    this.showMessage('Email already registered! Please use another email.', 'error');
+                    return;
+                }
+
+                // Create new user
+                const newUser = {
+                    username: username,
+                    email: email,
+                    password: password, // In a real app, this would be hashed
+                    fullName: fullName || username,
+                    createdAt: new Date().toISOString()
+                };
+
+                this.users.push(newUser);
+                this.saveUsers();
+                
+                this.showMessage('Account created successfully! You can now login.', 'success');
+                
+                // Clear form and switch to login after delay
+                setTimeout(() => {
+                    this.signupForm.reset();
+                    this.showLogin();
+                    document.getElementById('loginUsername').value = username;
+                }, 2000);
+            }
+
+            handleLogin(e) {
+                e.preventDefault();
+                const username = document.getElementById('loginUsername').value.trim();
+                const password = document.getElementById('loginPassword').value;
+                
+                const user = this.users.find(u => 
+                    u.username.toLowerCase() === username.toLowerCase() && u.password === password
+                );
+                
+                if (user) {
+                    this.isLoggedIn = true;
+                    this.currentUser = user;
+                    this.loginContainer.style.display = 'none';
+                    this.playerContainer.style.display = 'block';
+                    
+                    // Update welcome message
+                    const welcomeMsg = document.querySelector('.logo');
+                    welcomeMsg.innerHTML = `🎵 Welcome, ${user.fullName || user.username}!`;
+                    
+                    // Initialize player with first track if available
+                    if (this.playlist.length > 0) {
+                        this.playerStatus.textContent = `Ready to play ${this.playlist.length} tracks! Click any song to start 🎵`;
+                        this.renderPlaylist();
+                    } else {
+                        this.playerStatus.textContent = 'Add some music to get started! 🎵';
+                    }
+                } else {
+                    this.showMessage('Invalid username or password!', 'error');
+                }
+            }
+
+            saveUsers() {
+                try {
+                    // In a real app, you wouldn't store users in memory
+                    // This is just for demo purposes
+                    console.log('User data saved in memory for demo');
+                } catch (error) {
+                    console.log('Note: User data is stored in memory for this demo');
+                }
+            }
+
+            handleLogout() {
+                this.isLoggedIn = false;
+                this.currentUser = null;
+                this.loginContainer.style.display = 'block';
+                this.signupContainer.style.display = 'none';
+                this.playerContainer.style.display = 'none';
+                
+                // Reset form and welcome message
+                document.getElementById('loginUsername').value = '';
+                document.getElementById('loginPassword').value = '';
+                document.querySelector('.logo').innerHTML = '🎵 YouTube Music Player';
+                this.clearMessages();
+            }
+
+            handleSearch() {
+                const query = this.searchInput.value.trim();
+                if (query) {
+                    // In a real app, you'd use YouTube API here
+                    alert(`Search functionality would query YouTube API for: "${query}"\n\nFor demo purposes, try adding a YouTube URL directly!`);
+                }
+            }
+
+            handleAddUrl() {
+                const url = this.urlInput.value.trim();
+                console.log('Attempting to add URL:', url);
+                
+                if (!url) {
+                    this.showMessage('Please enter a YouTube URL!', 'error');
+                    return;
+                }
+                
+                const videoId = this.extractVideoId(url);
+                console.log('Extracted video ID:', videoId);
+                
+                if (videoId) {
+                    // Check if already in playlist
+                    const existingTrack = this.playlist.find(track => track.id === videoId);
+                    if (existingTrack) {
+                        this.showMessage('This video is already in your playlist!', 'error');
+                        return;
+                    }
+
+                    // Create track with basic info
+                    const newTrack = {
+                        id: videoId,
+                        title: `YouTube Video`,
+                        artist: 'YouTube',
+                        thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+                        url: url
+                    };
+                    
+                    // Try to get video info from YouTube thumbnail API
+                    this.enhanceTrackInfo(newTrack);
+                    
+                    console.log('Adding track:', newTrack);
+                    
+                    this.playlist.push(newTrack);
+                    this.renderPlaylist();
+                    this.urlInput.value = '';
+                    
+                    this.showMessage(`Video added to playlist! Click to play.`, 'success');
+                    
+                    // If this is the first track, update the status
+                    if (this.playlist.length === 1) {
+                        this.playerStatus.textContent = 'Click the track below to start playing! 🎵';
+                    }
+                    
+                } else {
+                    this.showMessage('Invalid YouTube URL! Please check the format and try again.', 'error');
+                    console.log('URL parsing failed for:', url);
+                    
+                    // Show example in console for debugging
+                    console.log('Expected formats:');
+                    console.log('- https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+                    console.log('- https://youtu.be/dQw4w9WgXcQ');
+                    console.log('- dQw4w9WgXcQ (just the video ID)');
+                }
+            }
+
+            enhanceTrackInfo(track) {
+                // In a real app, you'd use YouTube API to get video details
+                // For demo, we'll use some heuristics based on video ID
+                const videoId = track.id;
+                
+                // Update title with video ID for identification
+                track.title = `Video ${videoId.substring(0, 8)}...`;
+                
+                // Try different thumbnail qualities
+                const thumbnailQualities = ['maxresdefault', 'hqdefault', 'mqdefault', 'default'];
+                
+                // Test thumbnail load and fallback if needed
+                const img = new Image();
+                img.onload = () => {
+                    console.log('Thumbnail loaded successfully');
+                };
+                img.onerror = () => {
+                    console.log('Maxres thumbnail failed, falling back to hqdefault');
+                    track.thumbnail = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                    this.renderPlaylist(); // Re-render with new thumbnail
+                };
+                img.src = track.thumbnail;
+            }
+
+            extractVideoId(url) {
+                console.log('Extracting video ID from:', url);
+                
+                // Clean the URL first
+                url = url.trim();
+                
+                // Handle different YouTube URL formats with more robust patterns
+                const patterns = [
+                    // Standard youtube.com/watch?v=
+                    /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?(?:.*&)?v=([a-zA-Z0-9_-]{11})/,
+                    // Short youtu.be format
+                    /(?:https?:\/\/)?(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]{11})/,
+                    // Embed format
+                    /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+                    // YouTube mobile format
+                    /(?:https?:\/\/)?(?:m\.)?youtube\.com\/watch\?(?:.*&)?v=([a-zA-Z0-9_-]{11})/,
+                    // Just the video ID (11 characters)
+                    /^([a-zA-Z0-9_-]{11})$/
+                ];
+                
+                for (const pattern of patterns) {
+                    const match = url.match(pattern);
+                    if (match && match[1] && match[1].length === 11) {
+                        console.log('Pattern matched:', pattern, 'ID:', match[1]);
+                        return match[1];
+                    }
+                }
+                
+                console.log('No patterns matched for URL:', url);
+                return null;
+            }
+
+            loadSamplePlaylist() {
+                // Load sample tracks that should work with YouTube embedding
+                this.playlist = [
+                    {
+                        id: 'jNQXAC9IVRw',
+                        title: 'Me at the zoo',
+                        artist: 'jawed',
+                        thumbnail: 'https://img.youtube.com/vi/jNQXAC9IVRw/hqdefault.jpg',
+                        url: 'https://www.youtube.com/watch?v=jNQXAC9IVRw'
+                    },
+                    {
+                        id: 'kJQP7kiw5Fk',
+                        title: 'Despacito',
+                        artist: 'Luis Fonsi ft. Daddy Yankee',
+                        thumbnail: 'https://img.youtube.com/vi/kJQP7kiw5Fk/hqdefault.jpg',
+                        url: 'https://www.youtube.com/watch?v=kJQP7kiw5Fk'
+                    },
+                    {
+                        id: '9bZkp7q19f0',
+                        title: 'Gangnam Style',
+                        artist: 'PSY',
+                        thumbnail: 'https://img.youtube.com/vi/9bZkp7q19f0/hqdefault.jpg',
+                        url: 'https://www.youtube.com/watch?v=9bZkp7q19f0'
+                    },
+                    {
+                        id: 'RgKAFK5djSk',
+                        title: 'Wiz Khalifa - See You Again',
+                        artist: 'Wiz Khalifa ft. Charlie Puth',
+                        thumbnail: 'https://img.youtube.com/vi/RgKAFK5djSk/hqdefault.jpg',
+                        url: 'https://www.youtube.com/watch?v=RgKAFK5djSk'
+                    },
+                    {
+                        id: 'YQHsXMglC9A',
+                        title: 'Hello',
+                        artist: 'Adele',
+                        thumbnail: 'https://img.youtube.com/vi/YQHsXMglC9A/hqdefault.jpg',
+                        url: 'https://www.youtube.com/watch?v=YQHsXMglC9A'
+                    },
+                    {
+                        id: 'CevxZvSJLk8',
+                        title: 'Roar',
+                        artist: 'Katy Perry',
+                        thumbnail: 'https://img.youtube.com/vi/CevxZvSJLk8/hqdefault.jpg',
+                        url: 'https://www.youtube.com/watch?v=CevxZvSJLk8'
+                    },
+                    {
+                        id: 'hT_nvWreIhg',
+                        title: 'Counting Stars',
+                        artist: 'OneRepublic',
+                        thumbnail: 'https://img.youtube.com/vi/hT_nvWreIhg/hqdefault.jpg',
+                        url: 'https://www.youtube.com/watch?v=hT_nvWreIhg'
+                    },
+                    {
+                        id: 'JGwWNGJdvx8',
+                        title: 'Shape of You',
+                        artist: 'Ed Sheeran',
+                        thumbnail: 'https://img.youtube.com/vi/JGwWNGJdvx8/hqdefault.jpg',
+                        url: 'https://www.youtube.com/watch?v=JGwWNGJdvx8'
+                    }
+                ];
+                this.renderPlaylist();
+                console.log('Music player initialized with', this.playlist.length, 'sample tracks');
+            }
+
+            renderPlaylist() {
+                this.playlistContainer.innerHTML = '';
+                
+                if (this.playlist.length === 0) {
+                    this.playlistContainer.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">No tracks in playlist. Add some music!</div>';
+                    return;
+                }
+                
+                this.playlist.forEach((track, index) => {
+                    const playlistItem = document.createElement('div');
+                    playlistItem.className = `playlist-item ${index === this.currentTrack ? 'active' : ''}`;
+                    playlistItem.addEventListener('click', () => this.playTrack(index));
+                    
+                    playlistItem.innerHTML = `
+                        <img src="${track.thumbnail}" alt="${this.escapeHtml(track.title)}" onerror="this.src='data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"60\" height=\"60\" viewBox=\"0 0 60 60\"><rect width=\"60\" height=\"60\" fill=\"%23f0f0f0\"/><text x=\"30\" y=\"35\" text-anchor=\"middle\" fill=\"%23999\" font-family=\"Arial\" font-size=\"12\">🎵</text></svg>'">
+                        <div class="track-info">
+                            <h4>${this.escapeHtml(this.truncateText(track.title, 50))}</h4>
+                            <p>${this.escapeHtml(track.artist)}</p>
+                        </div>
+                        <button class="remove-btn" onclick="event.stopPropagation(); musicPlayer.removeFromPlaylist(${index})" title="Remove from playlist">
+                            ✕
+                        </button>
+                    `;
+                    
+                    this.playlistContainer.appendChild(playlistItem);
+                });
+            }
+
+            removeFromPlaylist(index) {
+                try {
+                    if (index >= 0 && index < this.playlist.length) {
+                        const removedTrack = this.playlist.splice(index, 1)[0];
+                        
+                        // Adjust current track index if needed
+                        if (index < this.currentTrack) {
+                            this.currentTrack--;
+                        } else if (index === this.currentTrack) {
+                            // If removing current track, play next or previous
+                            if (this.playlist.length > 0) {
+                                if (this.currentTrack >= this.playlist.length) {
+                                    this.currentTrack = 0;
+                                }
+                                this.playTrack(this.currentTrack);
+                            } else {
+                                // No tracks left
+                                this.videoPlayer.src = '';
+                                this.currentTrack = 0;
+                            }
+                        }
+                        
+                        this.renderPlaylist();
+                        this.showMessage(`"${this.truncateText(removedTrack.title, 30)}" removed from playlist!`, 'success');
+                    }
+                } catch (error) {
+                    console.error('Error removing from playlist:', error);
+                    this.showMessage('Error removing track. Please try again.', 'error');
+                }
+            }
+
+            playTrack(index) {
+                try {
+                    if (index >= 0 && index < this.playlist.length) {
+                        this.currentTrack = index;
+                        const track = this.playlist[index];
+                        
+                        console.log('Playing track:', track);
+                        
+                        // Update now playing info
+                        this.updateNowPlaying(track);
+                        
+                        // Create YouTube embed URL with better parameters for loading
+                        const embedUrl = `https://www.youtube.com/embed/${track.id}?autoplay=1&rel=0&modestbranding=1&fs=1&cc_load_policy=0&iv_load_policy=3&autohide=1`;
+                        
+                        console.log('Loading video URL:', embedUrl);
+                        
+                        // Update player status
+                        this.playerStatus.textContent = `🎵 Loading: ${track.title}...`;
+                        
+                        // Load the video with error handling
+                        this.videoPlayer.src = embedUrl;
+                        
+                        // Add load event listener
+                        this.videoPlayer.onload = () => {
+                            console.log('Video loaded successfully');
+                            this.playerStatus.textContent = `🎵 Now Playing: ${track.title}`;
+                            this.playPauseBtn.innerHTML = '⏸ Pause';
+                        };
+                        
+                        // Add error event listener
+                        this.videoPlayer.onerror = (e) => {
+                            console.error('Video load error:', e);
+                            this.playerStatus.textContent = `❌ Could not load: ${track.title}`;
+                            this.showMessage('Video could not be loaded. It may be restricted or unavailable.', 'error');
+                        };
+                        
+                        // Update after a short delay to allow for loading
+                        setTimeout(() => {
+                            if (this.videoPlayer.src === embedUrl) {
+                                this.playerStatus.textContent = `🎵 Now Playing: ${track.title}`;
+                                this.playPauseBtn.innerHTML = '⏸ Pause';
+                            }
+                        }, 2000);
+                        
+                        this.renderPlaylist();
+                        
+                        // Update page title
+                        document.title = `${track.title} - YouTube Music Player`;
+                        
+                        console.log(`Attempting to play: ${track.title} (${track.id})`);
+                    }
+                } catch (error) {
+                    console.error('Error playing track:', error);
+                    this.playerStatus.textContent = '❌ Error playing track';
+                    this.showMessage('Error playing track. The video may be restricted or unavailable.', 'error');
+                }
+            }
+
+            updateNowPlaying(track) {
+                this.nowPlaying.className = 'now-playing active';
+                this.nowPlayingImage.src = track.thumbnail;
+                this.nowPlayingImage.alt = track.title;
+                this.nowPlayingTitle.textContent = this.truncateText(track.title, 50);
+                this.nowPlayingArtist.textContent = track.artist;
+            }
+
+            previousTrack() {
+                if (this.playlist.length === 0) {
+                    this.showMessage('No tracks in playlist!', 'error');
+                    this.playerStatus.textContent = 'No tracks in playlist';
+                    return;
+                }
+                const prevIndex = this.currentTrack > 0 ? this.currentTrack - 1 : this.playlist.length - 1;
+                this.playTrack(prevIndex);
+            }
+
+            nextTrack() {
+                if (this.playlist.length === 0) {
+                    this.showMessage('No tracks in playlist!', 'error');
+                    this.playerStatus.textContent = 'No tracks in playlist';
+                    return;
+                }
+                const nextIndex = (this.currentTrack + 1) % this.playlist.length;
+                this.playTrack(nextIndex);
+            }
+
+            togglePlayPause() {
+                try {
+                    if (this.playlist.length === 0) {
+                        this.showMessage('No tracks in playlist to play!', 'error');
+                        return;
+                    }
+
+                    const currentSrc = this.videoPlayer.src;
+                    
+                    if (!currentSrc) {
+                        // No video loaded, play first track
+                        this.playTrack(this.currentTrack);
+                        return;
+                    }
+
+                    if (currentSrc.includes('autoplay=1')) {
+                        // Currently playing, pause by reloading without autoplay
+                        const pausedUrl = currentSrc.replace('autoplay=1', 'autoplay=0');
+                        this.videoPlayer.src = pausedUrl;
+                        this.playPauseBtn.innerHTML = '▶ Play';
+                        this.playerStatus.textContent = '⏸ Paused';
+                    } else {
+                        // Currently paused, play by reloading with autoplay
+                        const playUrl = currentSrc.replace('autoplay=0', 'autoplay=1');
+                        this.videoPlayer.src = playUrl;
+                        this.playPauseBtn.innerHTML = '⏸ Pause';
+                        const track = this.playlist[this.currentTrack];
+                        this.playerStatus.textContent = `🎵 Playing: ${track.title}`;
+                    }
+                } catch (error) {
+                    console.error('Play/pause error:', error);
+                    this.showMessage('Playback control limited by YouTube embed restrictions. Try clicking a song directly.', 'error');
+                }
+            }
         }
-      }
-    });
 
-    // --- Auto-initialization ---
-    // Try to restore previous session (in real app this would use localStorage)
-    function tryAutoLogin() {
-      // For demo purposes, we'll skip auto-login
-      // In production: const storedUser = localStorage.getItem('currentUser');
-      initialize();
-    }
-
-    // --- Initialize App ---
-    tryAutoLogin();
-    
-    // Add some visual feedback for interactions
-    document.addEventListener('click', (e) => {
-      if (e.target.classList.contains('btn')) {
-        e.target.style.transform = 'scale(0.95)';
-        setTimeout(() => {
-          e.target.style.transform = '';
-        }, 150);
-      }
-    });
-
-    // Make functions globally accessible for onclick handlers
-    window.approveRequest = approveRequest;
-    window.dismissRequest = dismissRequest;
-    window.deleteUser = deleteUser;
-    window.removeFromPlaylist = removeFromPlaylist;
-    window.playTrack = playTrack;
-    window.requestFromSearch = requestFromSearch;
-  </script>
+        // Initialize the music player when the page loads
+        let musicPlayer;
+        document.addEventListener('DOMContentLoaded', () => {
+            musicPlayer = new MusicPlayer();
+        });
+    </script>
 </body>
 </html>
